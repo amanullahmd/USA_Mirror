@@ -8,6 +8,8 @@ import Home from "@/pages/Home";
 import SubmitPage from "@/pages/SubmitPage";
 import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/AdminDashboard";
+import AdminCategories from "@/pages/AdminCategories";
+import AdminPackages from "@/pages/AdminPackages";
 import CategoryPage from "@/pages/CategoryPage";
 import ListingDetail from "@/pages/ListingDetail";
 
@@ -18,6 +20,8 @@ function Router() {
       <Route path="/submit" component={SubmitPage} />
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/categories" component={AdminCategories} />
+      <Route path="/admin/packages" component={AdminPackages} />
       <Route path="/admin/:section" component={AdminDashboard} />
       <Route path="/category/:category" component={CategoryPage} />
       <Route path="/listing/:id" component={ListingDetail} />

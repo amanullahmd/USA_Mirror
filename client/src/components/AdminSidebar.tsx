@@ -11,7 +11,7 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Inbox, List, FolderTree, MapPin, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Inbox, List, FolderTree, MapPin, Package, Settings, LogOut } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -23,6 +23,7 @@ export default function AdminSidebar() {
     { title: "Pending Submissions", url: "/admin/submissions", icon: Inbox, badge: 12 },
     { title: "All Listings", url: "/admin/listings", icon: List },
     { title: "Categories", url: "/admin/categories", icon: FolderTree },
+    { title: "Packages", url: "/admin/packages", icon: Package },
     { title: "Locations", url: "/admin/locations", icon: MapPin },
     { title: "Settings", url: "/admin/settings", icon: Settings },
   ];

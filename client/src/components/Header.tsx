@@ -1,8 +1,9 @@
 import { Link } from "wouter";
-import { Search, Menu, X, Globe } from "lucide-react";
+import { Search, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { Logo } from "./Logo";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -21,11 +22,8 @@ export default function Header() {
     <header className="sticky top-0 z-50 bg-background border-b">
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2" data-testid="link-home">
-            <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-              <Globe className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="font-bold text-lg hidden sm:inline">The USA Mirror</span>
+          <Link href="/" data-testid="link-home">
+            <Logo className="hover-elevate rounded-md p-1" />
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">
