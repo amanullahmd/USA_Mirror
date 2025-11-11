@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { storage } from "./storage";
-import { insertSubmissionSchema } from "@shared/schema";
+import { insertSubmissionSchema, insertCategorySchema, insertPromotionalPackageSchema } from "@shared/schema";
 import bcrypt from "bcrypt";
 import "./types";
 
@@ -140,7 +140,7 @@ export function registerRoutes(app: Express) {
       if (status === 'approved') {
         const submission = await storage.getSubmissionById(id);
         if (submission) {
-          await storage.createListing({
+          const newListing: any = {
             title: submission.businessName,
             description: submission.description,
             categoryId: submission.categoryId,
@@ -150,7 +150,23 @@ export function registerRoutes(app: Express) {
             phone: submission.phone,
             email: submission.email,
             website: submission.website || undefined,
-          });
+            imageUrl: submission.imageUrl || undefined,
+            videoUrl: submission.videoUrl || undefined,
+            listingType: submission.listingType,
+            packageId: submission.packageId || undefined,
+          };
+
+          // Calculate expiration if promotional
+          if (submission.listingType === 'promotional' && submission.packageId) {
+            const pkg = await storage.getPromotionalPackageById(submission.packageId);
+            if (pkg) {
+              const expiresAt = new Date();
+              expiresAt.setDate(expiresAt.getDate() + pkg.durationDays);
+              newListing.expiresAt = expiresAt;
+            }
+          }
+
+          await storage.createListing(newListing);
         }
       }
 
@@ -162,6 +178,127 @@ export function registerRoutes(app: Express) {
       res.json(updatedSubmission);
     } catch (error) {
       res.status(500).json({ error: "Failed to update submission" });
+    }
+  });
+
+  // Promotional Packages
+  app.get("/api/promotional-packages", async (req, res) => {
+    try {
+      const packages = await storage.getActivePromotionalPackages();
+      res.json(packages);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch promotional packages" });
+    }
+  });
+
+  // Admin Routes - Promotional Packages
+  app.get("/api/admin/promotional-packages", async (req, res) => {
+    try {
+      if (!req.session?.adminId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      const packages = await storage.getPromotionalPackages();
+      res.json(packages);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch promotional packages" });
+    }
+  });
+
+  app.post("/api/admin/promotional-packages", async (req, res) => {
+    try {
+      if (!req.session?.adminId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      const validatedData = insertPromotionalPackageSchema.parse(req.body);
+      const pkg = await storage.createPromotionalPackage(validatedData);
+      res.status(201).json(pkg);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Failed to create promotional package" });
+    }
+  });
+
+  app.patch("/api/admin/promotional-packages/:id", async (req, res) => {
+    try {
+      if (!req.session?.adminId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      const id = parseInt(req.params.id);
+      const pkg = await storage.updatePromotionalPackage(id, req.body);
+      if (!pkg) {
+        return res.status(404).json({ error: "Package not found" });
+      }
+      res.json(pkg);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update promotional package" });
+    }
+  });
+
+  app.delete("/api/admin/promotional-packages/:id", async (req, res) => {
+    try {
+      if (!req.session?.adminId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      const id = parseInt(req.params.id);
+      await storage.deletePromotionalPackage(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete promotional package" });
+    }
+  });
+
+  // Admin Routes - Categories
+  app.post("/api/admin/categories", async (req, res) => {
+    try {
+      if (!req.session?.adminId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      const validatedData = insertCategorySchema.parse(req.body);
+      const category = await storage.createCategory(validatedData);
+      res.status(201).json(category);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Failed to create category" });
+    }
+  });
+
+  app.patch("/api/admin/categories/:id", async (req, res) => {
+    try {
+      if (!req.session?.adminId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      const id = parseInt(req.params.id);
+      const category = await storage.updateCategory(id, req.body);
+      if (!category) {
+        return res.status(404).json({ error: "Category not found" });
+      }
+      res.json(category);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update category" });
+    }
+  });
+
+  app.delete("/api/admin/categories/:id", async (req, res) => {
+    try {
+      if (!req.session?.adminId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      const id = parseInt(req.params.id);
+      await storage.deleteCategory(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete category" });
+    }
+  });
+
+  // Stats
+  app.get("/api/admin/stats", async (req, res) => {
+    try {
+      if (!req.session?.adminId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      const stats = await storage.getStats();
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch stats" });
     }
   });
 

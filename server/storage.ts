@@ -5,7 +5,8 @@ import {
   type Listing, type InsertListing,
   type Submission, type InsertSubmission,
   type AdminUser,
-  categories, countries, regions, listings, submissions, adminUsers
+  type PromotionalPackage, type InsertPromotionalPackage,
+  categories, countries, regions, listings, submissions, adminUsers, promotionalPackages
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -14,7 +15,10 @@ export interface IStorage {
   // Categories
   getCategories(): Promise<Category[]>;
   getCategoryBySlug(slug: string): Promise<Category | undefined>;
+  getCategoryById(id: number): Promise<Category | undefined>;
   createCategory(category: InsertCategory): Promise<Category>;
+  updateCategory(id: number, category: Partial<InsertCategory>): Promise<Category | undefined>;
+  deleteCategory(id: number): Promise<void>;
   
   // Countries
   getCountries(): Promise<Country[]>;
@@ -26,6 +30,14 @@ export interface IStorage {
   getRegionsByCountry(countryId: number): Promise<Region[]>;
   getRegionBySlug(slug: string): Promise<Region | undefined>;
   createRegion(region: InsertRegion): Promise<Region>;
+  
+  // Promotional Packages
+  getPromotionalPackages(): Promise<PromotionalPackage[]>;
+  getActivePromotionalPackages(): Promise<PromotionalPackage[]>;
+  getPromotionalPackageById(id: number): Promise<PromotionalPackage | undefined>;
+  createPromotionalPackage(pkg: InsertPromotionalPackage): Promise<PromotionalPackage>;
+  updatePromotionalPackage(id: number, pkg: Partial<InsertPromotionalPackage>): Promise<PromotionalPackage | undefined>;
+  deletePromotionalPackage(id: number): Promise<void>;
   
   // Listings
   getListings(options?: { categoryId?: number; countryId?: number; regionId?: number; featured?: boolean; limit?: number }): Promise<Listing[]>;
@@ -63,9 +75,26 @@ export class DatabaseStorage implements IStorage {
     return category || undefined;
   }
 
+  async getCategoryById(id: number): Promise<Category | undefined> {
+    const [category] = await db.select().from(categories).where(eq(categories.id, id));
+    return category || undefined;
+  }
+
   async createCategory(insertCategory: InsertCategory): Promise<Category> {
     const [category] = await db.insert(categories).values(insertCategory).returning();
     return category;
+  }
+
+  async updateCategory(id: number, updateData: Partial<InsertCategory>): Promise<Category | undefined> {
+    const [category] = await db.update(categories)
+      .set(updateData)
+      .where(eq(categories.id, id))
+      .returning();
+    return category || undefined;
+  }
+
+  async deleteCategory(id: number): Promise<void> {
+    await db.delete(categories).where(eq(categories.id, id));
   }
 
   // Countries
@@ -100,6 +129,40 @@ export class DatabaseStorage implements IStorage {
   async createRegion(insertRegion: InsertRegion): Promise<Region> {
     const [region] = await db.insert(regions).values(insertRegion).returning();
     return region;
+  }
+
+  // Promotional Packages
+  async getPromotionalPackages(): Promise<PromotionalPackage[]> {
+    return await db.select().from(promotionalPackages).orderBy(promotionalPackages.price);
+  }
+
+  async getActivePromotionalPackages(): Promise<PromotionalPackage[]> {
+    return await db.select()
+      .from(promotionalPackages)
+      .where(eq(promotionalPackages.active, true))
+      .orderBy(promotionalPackages.price);
+  }
+
+  async getPromotionalPackageById(id: number): Promise<PromotionalPackage | undefined> {
+    const [pkg] = await db.select().from(promotionalPackages).where(eq(promotionalPackages.id, id));
+    return pkg || undefined;
+  }
+
+  async createPromotionalPackage(insertPackage: InsertPromotionalPackage): Promise<PromotionalPackage> {
+    const [pkg] = await db.insert(promotionalPackages).values(insertPackage).returning();
+    return pkg;
+  }
+
+  async updatePromotionalPackage(id: number, updateData: Partial<InsertPromotionalPackage>): Promise<PromotionalPackage | undefined> {
+    const [pkg] = await db.update(promotionalPackages)
+      .set(updateData)
+      .where(eq(promotionalPackages.id, id))
+      .returning();
+    return pkg || undefined;
+  }
+
+  async deletePromotionalPackage(id: number): Promise<void> {
+    await db.delete(promotionalPackages).where(eq(promotionalPackages.id, id));
   }
 
   // Listings
