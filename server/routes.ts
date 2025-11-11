@@ -346,19 +346,4 @@ export function registerRoutes(app: Express) {
       res.json({ authenticated: false });
     }
   });
-
-  // Admin Stats
-  app.get("/api/admin/stats", async (req, res) => {
-    try {
-      // Check if user is authenticated as admin
-      if (!req.session?.adminId) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      const stats = await storage.getStats();
-      res.json(stats);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch stats" });
-    }
-  });
 }
