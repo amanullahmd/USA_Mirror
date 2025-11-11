@@ -26,8 +26,8 @@ import { useToast } from "@/hooks/use-toast";
 const formSchema = z.object({
   businessName: z.string().min(2, "Business name must be at least 2 characters"),
   category: z.string().min(1, "Please select a category"),
-  division: z.string().min(1, "Please select a division"),
-  district: z.string().min(1, "Please select a district"),
+  country: z.string().min(1, "Please select a country"),
+  city: z.string().min(1, "Please select a city/region"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   contactPerson: z.string().min(2, "Contact person name is required"),
   phone: z.string().min(10, "Valid phone number is required"),
@@ -46,8 +46,8 @@ export default function SubmissionForm() {
     defaultValues: {
       businessName: "",
       category: "",
-      division: "",
-      district: "",
+      country: "",
+      city: "",
       description: "",
       contactPerson: "",
       phone: "",
@@ -66,16 +66,16 @@ export default function SubmissionForm() {
     setStep(1);
   }
 
-  const categories = ["News", "Services", "Education", "Banks", "Technology", "Travel", "Healthcare", "Real Estate"];
-  const divisions = ["Dhaka", "Chittagong", "Rajshahi", "Khulna", "Sylhet", "Barisal", "Rangpur", "Mymensingh"];
-  const districts = ["Dhaka", "Gazipur", "Narayanganj", "Tangail", "Chittagong", "Cox's Bazar", "Rajshahi", "Bogra"];
+  const categories = ["News", "Business", "Education", "Technology", "Travel", "Entertainment", "Healthcare", "Real Estate", "Finance", "Legal"];
+  const countries = ["United States", "United Kingdom", "Canada", "Australia", "India", "Bangladesh", "Germany", "France", "Japan", "Singapore"];
+  const cities = ["New York", "London", "Toronto", "Sydney", "Mumbai", "Dhaka", "Berlin", "Paris", "Tokyo", "Singapore"];
 
   return (
     <Card className="max-w-3xl mx-auto" data-testid="form-submission">
       <CardHeader>
         <CardTitle>Submit Your Business Listing</CardTitle>
         <CardDescription>
-          Fill out the form below to add your business to our directory. All submissions are reviewed before publishing.
+          Fill out the form below to add your business to our global directory. All submissions are reviewed before publishing.
         </CardDescription>
         <div className="flex items-center gap-2 mt-4">
           <div className={`flex-1 h-2 rounded-full ${step >= 1 ? "bg-primary" : "bg-muted"}`} />
@@ -128,20 +128,20 @@ export default function SubmissionForm() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="division"
+                    name="country"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Division</FormLabel>
+                        <FormLabel>Country</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger data-testid="select-division">
-                              <SelectValue placeholder="Select division" />
+                            <SelectTrigger data-testid="select-country">
+                              <SelectValue placeholder="Select country" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {divisions.map((div) => (
-                              <SelectItem key={div} value={div.toLowerCase()}>
-                                {div}
+                            {countries.map((country) => (
+                              <SelectItem key={country} value={country.toLowerCase().replace(/\s+/g, '-')}>
+                                {country}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -152,20 +152,20 @@ export default function SubmissionForm() {
                   />
                   <FormField
                     control={form.control}
-                    name="district"
+                    name="city"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>District</FormLabel>
+                        <FormLabel>City/Region</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger data-testid="select-district">
-                              <SelectValue placeholder="Select district" />
+                            <SelectTrigger data-testid="select-city">
+                              <SelectValue placeholder="Select city" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {districts.map((dist) => (
-                              <SelectItem key={dist} value={dist.toLowerCase()}>
-                                {dist}
+                            {cities.map((city) => (
+                              <SelectItem key={city} value={city.toLowerCase().replace(/\s+/g, '-')}>
+                                {city}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -228,7 +228,7 @@ export default function SubmissionForm() {
                       <FormItem>
                         <FormLabel>Phone</FormLabel>
                         <FormControl>
-                          <Input placeholder="+880 1234 567890" {...field} data-testid="input-phone" />
+                          <Input placeholder="+1 234 567 8900" {...field} data-testid="input-phone" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

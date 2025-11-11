@@ -1,11 +1,10 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Building2, MapPin, Map } from "lucide-react";
+import { Building2, Globe2, MapPin } from "lucide-react";
 
 export default function StatsBar() {
   const stats = [
-    { icon: Building2, label: "Total Listings", value: "450+" },
-    { icon: MapPin, label: "Districts", value: "64" },
-    { icon: Map, label: "Divisions", value: "8" },
+    { icon: Building2, label: "Total Listings", value: "2,500+" },
+    { icon: Globe2, label: "Countries", value: "50+" },
+    { icon: MapPin, label: "Cities", value: "200+" },
   ];
 
   return (

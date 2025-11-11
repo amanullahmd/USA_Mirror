@@ -6,16 +6,16 @@ export default function Footer() {
 
   const categories = [
     { label: "News", href: "/category/news" },
-    { label: "Services", href: "/category/services" },
+    { label: "Business", href: "/category/business" },
     { label: "Education", href: "/category/education" },
-    { label: "Banks", href: "/category/banks" },
+    { label: "Technology", href: "/category/technology" },
   ];
 
-  const divisions = [
-    { label: "Dhaka", href: "/location/dhaka" },
-    { label: "Chittagong", href: "/location/chittagong" },
-    { label: "Rajshahi", href: "/location/rajshahi" },
-    { label: "Khulna", href: "/location/khulna" },
+  const countries = [
+    { label: "United States", href: "/location/usa" },
+    { label: "United Kingdom", href: "/location/uk" },
+    { label: "Canada", href: "/location/canada" },
+    { label: "Australia", href: "/location/australia" },
   ];
 
   return (
@@ -25,7 +25,7 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold mb-3">About</h3>
             <p className="text-sm text-muted-foreground">
-              Bangladesh's complete directory portal featuring comprehensive listings across all divisions and districts.
+              The world's most comprehensive directory portal featuring listings across multiple countries and regions.
             </p>
           </div>
           <div>
@@ -43,12 +43,12 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <h3 className="font-semibold mb-3">Divisions</h3>
+            <h3 className="font-semibold mb-3">Countries</h3>
             <ul className="space-y-2">
-              {divisions.map((item) => (
+              {countries.map((item) => (
                 <li key={item.href}>
                   <Link href={item.href}>
-                    <a className="text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid={`link-footer-div-${item.label.toLowerCase()}`}>
+                    <a className="text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid={`link-footer-country-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
                       {item.label}
                     </a>
                   </Link>
@@ -78,7 +78,7 @@ export default function Footer() {
         </div>
         <Separator className="mb-6" />
         <div className="text-center text-sm text-muted-foreground">
-          <p>&copy; {currentYear} Bangladesh Directory Portal. All rights reserved.</p>
+          <p>&copy; {currentYear} Global Directory Portal. All rights reserved.</p>
         </div>
       </div>
     </footer>

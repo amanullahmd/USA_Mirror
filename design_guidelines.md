@@ -1,7 +1,7 @@
-# Design Guidelines: Bangladesh Directory Portal
+# Design Guidelines: Global Directory Portal
 
 ## Design Approach
-**System-Based Approach** using principles from Material Design and traditional directory portals, optimized for information density and scanability. This is a content-first, utility-focused application where clear hierarchy and efficient navigation are paramount.
+**System-Based Approach** using principles from Material Design and traditional directory portals, optimized for information density and scanability. This is a content-first, utility-focused global application where clear hierarchy, efficient navigation, and international accessibility are paramount.
 
 ## Typography System
 

@@ -12,15 +12,15 @@ export default function ListingDetail() {
 
   const listing = {
     id,
-    title: "Daily Prothom Alo",
+    title: "The New York Times",
     category: "News",
-    division: "Dhaka",
-    district: "Dhaka",
-    description: "Prothom Alo is a leading Bengali-language daily newspaper in Bangladesh. Published from Dhaka, it is the country's most circulated newspaper with comprehensive news coverage across national and international affairs, politics, business, sports, entertainment, and culture. Known for its investigative journalism and editorial excellence.",
+    country: "United States",
+    city: "New York",
+    description: "The New York Times is an American daily newspaper based in New York City with a worldwide readership. Founded in 1851, the Times has since won 132 Pulitzer Prizes, more than any other newspaper, and has long been regarded within the industry as a national newspaper of record. It is ranked 18th in the world by circulation and 3rd in the U.S. The paper is owned by The New York Times Company.",
     contactPerson: "Editorial Department",
-    phone: "+880 2 8158301-5",
-    email: "info@prothomalo.com",
-    website: "https://www.prothomalo.com",
+    phone: "+1 212 556 1234",
+    email: "news@nytimes.com",
+    website: "https://www.nytimes.com",
     featured: true,
   };
 
@@ -53,7 +53,7 @@ export default function ListingDetail() {
                     <Badge variant="secondary">{listing.category}</Badge>
                     <Badge variant="outline" className="gap-1">
                       <MapPin className="w-3 h-3" />
-                      {listing.district}, {listing.division}
+                      {listing.city}, {listing.country}
                     </Badge>
                   </div>
                 </div>

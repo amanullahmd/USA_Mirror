@@ -12,7 +12,7 @@ export default function SubmitPage() {
           <div className="mb-8 text-center">
             <h1 className="text-3xl md:text-4xl font-bold mb-3">Submit Your Listing</h1>
             <p className="text-muted-foreground">
-              Join hundreds of businesses already listed on our platform
+              Join thousands of businesses already listed on our global platform
             </p>
           </div>
           <SubmissionForm />

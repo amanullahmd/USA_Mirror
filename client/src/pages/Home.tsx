@@ -3,67 +3,67 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CategoryCard from "@/components/CategoryCard";
 import ListingCard from "@/components/ListingCard";
-import DivisionTabs from "@/components/DivisionTabs";
+import CountryTabs from "@/components/CountryTabs";
 import StatsBar from "@/components/StatsBar";
 import { Button } from "@/components/ui/button";
-import { Newspaper, Building2, GraduationCap, Landmark, Plane, Stethoscope, Code, Home as HomeIcon } from "lucide-react";
+import { Newspaper, Building2, GraduationCap, Code, Plane, Clapperboard, Stethoscope, Home as HomeIcon } from "lucide-react";
 
 export default function Home() {
   const categories = [
-    { title: "News", count: 125, href: "/category/news", icon: Newspaper },
-    { title: "Services", count: 340, href: "/category/services", icon: Building2 },
-    { title: "Education", count: 89, href: "/category/education", icon: GraduationCap },
-    { title: "Banks", count: 52, href: "/category/banks", icon: Landmark },
-    { title: "Technology", count: 67, href: "/category/technology", icon: Code },
-    { title: "Travel", count: 43, href: "/category/travel", icon: Plane },
-    { title: "Healthcare", count: 78, href: "/category/healthcare", icon: Stethoscope },
-    { title: "Real Estate", count: 95, href: "/category/real-estate", icon: HomeIcon },
+    { title: "News", count: 425, href: "/category/news", icon: Newspaper },
+    { title: "Business", count: 840, href: "/category/business", icon: Building2 },
+    { title: "Education", count: 289, href: "/category/education", icon: GraduationCap },
+    { title: "Technology", count: 567, href: "/category/technology", icon: Code },
+    { title: "Travel", count: 343, href: "/category/travel", icon: Plane },
+    { title: "Entertainment", count: 278, href: "/category/entertainment", icon: Clapperboard },
+    { title: "Healthcare", count: 198, href: "/category/healthcare", icon: Stethoscope },
+    { title: "Real Estate", count: 395, href: "/category/real-estate", icon: HomeIcon },
   ];
 
   const featuredListings = [
     {
       id: "1",
-      title: "Daily Prothom Alo",
+      title: "The New York Times",
       category: "News",
-      location: "Dhaka",
-      description: "Leading Bengali daily newspaper providing comprehensive news coverage across Bangladesh and the world.",
+      location: "New York, USA",
+      description: "Leading international newspaper providing comprehensive news coverage and investigative journalism.",
       featured: true,
     },
     {
       id: "2",
-      title: "Bangladesh Bank",
-      category: "Banks",
-      location: "Dhaka",
-      description: "Central bank of Bangladesh responsible for monetary policy and banking regulation.",
+      title: "Goldman Sachs",
+      category: "Finance",
+      location: "New York, USA",
+      description: "Global investment banking, securities and investment management firm.",
     },
     {
       id: "3",
-      title: "Dhaka University",
+      title: "Harvard University",
       category: "Education",
-      location: "Dhaka",
-      description: "Premier public university in Bangladesh offering undergraduate and graduate programs.",
+      location: "Cambridge, USA",
+      description: "Premier Ivy League research university offering undergraduate and graduate programs.",
     },
     {
       id: "4",
-      title: "Square Pharmaceuticals",
-      category: "Healthcare",
-      location: "Dhaka",
-      description: "Leading pharmaceutical company in Bangladesh manufacturing quality medicines.",
+      title: "Google",
+      category: "Technology",
+      location: "Mountain View, USA",
+      description: "Leading technology company specializing in internet services and products.",
       featured: true,
     },
     {
       id: "5",
-      title: "Biman Bangladesh Airlines",
-      category: "Travel",
-      location: "Dhaka",
-      description: "National flag carrier airline of Bangladesh serving domestic and international routes.",
+      title: "BBC News",
+      category: "News",
+      location: "London, UK",
+      description: "British public service broadcaster providing international news coverage.",
     },
     {
       id: "6",
-      title: "BUET",
+      title: "Oxford University",
       category: "Education",
-      location: "Dhaka",
-      description: "Bangladesh University of Engineering and Technology - top engineering institution.",
+      location: "Oxford, UK",
+      description: "World-renowned research university and the oldest university in the English-speaking world.",
     },
   ];
 
@@ -78,10 +78,10 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
             <div className="text-center mb-8">
               <h1 className="text-3xl md:text-4xl font-bold mb-3">
-                Bangladesh Directory Portal
+                Global Directory Portal
               </h1>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-6">
-                Your complete guide to businesses, services, and organizations across all 8 divisions and 64 districts of Bangladesh
+                Your complete guide to businesses, services, and organizations across 50+ countries and 200+ cities worldwide
               </p>
               <Link href="/submit">
                 <Button size="lg" data-testid="button-hero-submit">
@@ -105,8 +105,8 @@ export default function Home() {
 
         <section className="py-8 md:py-12 bg-background">
           <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-            <h2 className="text-2xl font-semibold mb-6">Browse by Location</h2>
-            <DivisionTabs />
+            <h2 className="text-2xl font-semibold mb-6">Browse by Country</h2>
+            <CountryTabs />
           </div>
         </section>
 
