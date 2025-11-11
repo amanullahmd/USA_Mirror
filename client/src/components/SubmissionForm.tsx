@@ -202,7 +202,11 @@ export default function SubmissionForm() {
                         </FormControl>
                         <SelectContent>
                           {categories.map((cat) => (
-                            <SelectItem key={cat.id} value={cat.id.toString()}>
+                            <SelectItem 
+                              key={cat.id} 
+                              value={cat.id.toString()}
+                              data-testid={`option-category-${cat.id}`}
+                            >
                               {cat.name}
                             </SelectItem>
                           ))}
@@ -233,7 +237,11 @@ export default function SubmissionForm() {
                         </FormControl>
                         <SelectContent>
                           {countries.map((country) => (
-                            <SelectItem key={country.id} value={country.id.toString()}>
+                            <SelectItem 
+                              key={country.id} 
+                              value={country.id.toString()}
+                              data-testid={`option-country-${country.id}`}
+                            >
                               {country.flag} {country.name}
                             </SelectItem>
                           ))}
@@ -257,7 +265,11 @@ export default function SubmissionForm() {
                         </FormControl>
                         <SelectContent>
                           {regions.map((region) => (
-                            <SelectItem key={region.id} value={region.id.toString()}>
+                            <SelectItem 
+                              key={region.id} 
+                              value={region.id.toString()}
+                              data-testid={`option-city-${region.id}`}
+                            >
                               {region.name}
                             </SelectItem>
                           ))}
