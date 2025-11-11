@@ -97,9 +97,9 @@ export default function NewsHighlights() {
 
         <div className="mt-6 text-center">
           <Link href="/category/news">
-            <a className="text-sm text-primary hover:underline font-medium" data-testid="link-view-all-news">
+            <span className="text-sm text-primary hover:underline font-medium cursor-pointer" data-testid="link-view-all-news">
               View all news stories →
-            </a>
+            </span>
           </Link>
         </div>
       </div>

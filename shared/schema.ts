@@ -24,6 +24,16 @@ export const regions = pgTable("regions", {
   countryId: integer("country_id").notNull().references(() => countries.id),
 });
 
+export const promotionalPackages = pgTable("promotional_packages", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  price: integer("price").notNull(), // Price in cents
+  durationDays: integer("duration_days").notNull(),
+  features: text("features").array().notNull(),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const listings = pgTable("listings", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
@@ -35,8 +45,13 @@ export const listings = pgTable("listings", {
   phone: text("phone").notNull(),
   email: text("email").notNull(),
   website: text("website"),
+  imageUrl: text("image_url"),
+  videoUrl: text("video_url"),
+  listingType: text("listing_type").notNull().default("free"), // 'free' or 'promotional'
+  packageId: integer("package_id").references(() => promotionalPackages.id),
   featured: boolean("featured").notNull().default(false),
   views: integer("views").notNull().default(0),
+  expiresAt: timestamp("expires_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -51,6 +66,10 @@ export const submissions = pgTable("submissions", {
   phone: text("phone").notNull(),
   email: text("email").notNull(),
   website: text("website"),
+  imageUrl: text("image_url"),
+  videoUrl: text("video_url"),
+  listingType: text("listing_type").notNull().default("free"), // 'free' or 'promotional'
+  packageId: integer("package_id").references(() => promotionalPackages.id),
   status: text("status").notNull().default("pending"),
   submittedAt: timestamp("submitted_at").notNull().defaultNow(),
   reviewedAt: timestamp("reviewed_at"),
@@ -66,7 +85,8 @@ export const adminUsers = pgTable("admin_users", {
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true, count: true });
 export const insertCountrySchema = createInsertSchema(countries).omit({ id: true });
 export const insertRegionSchema = createInsertSchema(regions).omit({ id: true });
-export const insertListingSchema = createInsertSchema(listings).omit({ id: true, views: true, createdAt: true, featured: true });
+export const insertPromotionalPackageSchema = createInsertSchema(promotionalPackages).omit({ id: true, createdAt: true });
+export const insertListingSchema = createInsertSchema(listings).omit({ id: true, views: true, createdAt: true, featured: true, expiresAt: true });
 export const insertSubmissionSchema = createInsertSchema(submissions).omit({ id: true, status: true, submittedAt: true, reviewedAt: true });
 
 export type Category = typeof categories.$inferSelect;
@@ -75,6 +95,8 @@ export type Country = typeof countries.$inferSelect;
 export type InsertCountry = z.infer<typeof insertCountrySchema>;
 export type Region = typeof regions.$inferSelect;
 export type InsertRegion = z.infer<typeof insertRegionSchema>;
+export type PromotionalPackage = typeof promotionalPackages.$inferSelect;
+export type InsertPromotionalPackage = z.infer<typeof insertPromotionalPackageSchema>;
 export type Listing = typeof listings.$inferSelect;
 export type InsertListing = z.infer<typeof insertListingSchema>;
 export type Submission = typeof submissions.$inferSelect;

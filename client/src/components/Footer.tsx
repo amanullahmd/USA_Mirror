@@ -34,9 +34,9 @@ export default function Footer() {
               {categories.map((item) => (
                 <li key={item.href}>
                   <Link href={item.href}>
-                    <a className="text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid={`link-footer-${item.label.toLowerCase()}`}>
+                    <span className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid={`link-footer-${item.label.toLowerCase()}`}>
                       {item.label}
-                    </a>
+                    </span>
                   </Link>
                 </li>
               ))}
@@ -48,9 +48,9 @@ export default function Footer() {
               {countries.map((item) => (
                 <li key={item.href}>
                   <Link href={item.href}>
-                    <a className="text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid={`link-footer-country-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
+                    <span className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid={`link-footer-country-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
                       {item.label}
-                    </a>
+                    </span>
                   </Link>
                 </li>
               ))}
@@ -61,16 +61,16 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link href="/submit">
-                  <a className="text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-submit">
+                  <span className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-submit">
                     Submit Listing
-                  </a>
+                  </span>
                 </Link>
               </li>
               <li>
                 <Link href="/admin">
-                  <a className="text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-admin">
+                  <span className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-admin">
                     Admin Login
-                  </a>
+                  </span>
                 </Link>
               </li>
             </ul>

@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { storage } from "./storage";
 import { insertSubmissionSchema } from "@shared/schema";
 import bcrypt from "bcrypt";
+import "./types";
 
 export function registerRoutes(app: Express) {
   // Categories
@@ -193,7 +194,7 @@ export function registerRoutes(app: Express) {
   });
 
   app.post("/api/admin/logout", async (req, res) => {
-    req.session.destroy((err) => {
+    req.session.destroy((err: any) => {
       if (err) {
         return res.status(500).json({ error: "Logout failed" });
       }
