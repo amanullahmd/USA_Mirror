@@ -25,7 +25,7 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold mb-3">About</h3>
             <p className="text-sm text-muted-foreground">
-              The world's most comprehensive directory portal featuring listings across multiple countries and regions.
+              The USA Mirror - Your global directory featuring listings across multiple countries and regions.
             </p>
           </div>
           <div>
@@ -78,7 +78,7 @@ export default function Footer() {
         </div>
         <Separator className="mb-6" />
         <div className="text-center text-sm text-muted-foreground">
-          <p>&copy; {currentYear} Global Directory Portal. All rights reserved.</p>
+          <p>&copy; {currentYear} The USA Mirror. All rights reserved.</p>
         </div>
       </div>
     </footer>

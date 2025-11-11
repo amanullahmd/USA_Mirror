@@ -5,6 +5,7 @@ import CategoryCard from "@/components/CategoryCard";
 import ListingCard from "@/components/ListingCard";
 import CountryTabs from "@/components/CountryTabs";
 import StatsBar from "@/components/StatsBar";
+import NewsHighlights from "@/components/NewsHighlights";
 import { Button } from "@/components/ui/button";
 import { Newspaper, Building2, GraduationCap, Code, Plane, Clapperboard, Stethoscope, Home as HomeIcon } from "lucide-react";
 
@@ -78,7 +79,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
             <div className="text-center mb-8">
               <h1 className="text-3xl md:text-4xl font-bold mb-3">
-                Global Directory Portal
+                The USA Mirror
               </h1>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-6">
                 Your complete guide to businesses, services, and organizations across 50+ countries and 200+ cities worldwide
@@ -91,6 +92,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <NewsHighlights />
 
         <section className="py-8 md:py-12 bg-muted/30">
           <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
