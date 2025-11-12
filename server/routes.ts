@@ -510,6 +510,18 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  app.get("/api/admin/users", async (req, res) => {
+    try {
+      if (!req.session?.adminId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
   // Password Change
   app.post("/api/admin/change-password", async (req, res) => {
     try {

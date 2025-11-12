@@ -72,6 +72,7 @@ export interface IStorage {
   getAdminByResetToken(token: string): Promise<AdminUser | undefined>;
   
   // Users
+  getAllUsers(): Promise<User[]>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserById(id: number): Promise<User | undefined>;
   createUser(user: { email: string; passwordHash: string; firstName?: string; lastName?: string; phone?: string }): Promise<User>;
@@ -384,6 +385,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Users
+  async getAllUsers(): Promise<User[]> {
+    const allUsers = await db.select().from(users).orderBy(users.createdAt);
+    return allUsers;
+  }
+
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
     return user || undefined;
