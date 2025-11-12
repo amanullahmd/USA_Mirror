@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CategoryCard from "@/components/CategoryCard";
@@ -7,66 +8,30 @@ import CountryTabs from "@/components/CountryTabs";
 import StatsBar from "@/components/StatsBar";
 import NewsHighlights from "@/components/NewsHighlights";
 import { Button } from "@/components/ui/button";
-import { Newspaper, Building2, GraduationCap, Code, Plane, Clapperboard, Stethoscope, Home as HomeIcon } from "lucide-react";
+import { Newspaper, Building2, GraduationCap, Code, Plane, Clapperboard, Stethoscope, Home as HomeIcon, Briefcase, Heart } from "lucide-react";
+import type { Category, Listing } from "@shared/schema";
+
+const iconMap: Record<string, any> = {
+  newspaper: Newspaper,
+  building2: Building2,
+  graduationcap: GraduationCap,
+  code: Code,
+  plane: Plane,
+  clapperboard: Clapperboard,
+  stethoscope: Stethoscope,
+  home: HomeIcon,
+  briefcase: Briefcase,
+  heart: Heart,
+};
 
 export default function Home() {
-  const categories = [
-    { title: "News", count: 425, href: "/category/news", icon: Newspaper },
-    { title: "Business", count: 840, href: "/category/business", icon: Building2 },
-    { title: "Education", count: 289, href: "/category/education", icon: GraduationCap },
-    { title: "Technology", count: 567, href: "/category/technology", icon: Code },
-    { title: "Travel", count: 343, href: "/category/travel", icon: Plane },
-    { title: "Entertainment", count: 278, href: "/category/entertainment", icon: Clapperboard },
-    { title: "Healthcare", count: 198, href: "/category/healthcare", icon: Stethoscope },
-    { title: "Real Estate", count: 395, href: "/category/real-estate", icon: HomeIcon },
-  ];
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+  });
 
-  const featuredListings = [
-    {
-      id: "1",
-      title: "The New York Times",
-      category: "News",
-      location: "New York, USA",
-      description: "Leading international newspaper providing comprehensive news coverage and investigative journalism.",
-      featured: true,
-    },
-    {
-      id: "2",
-      title: "Goldman Sachs",
-      category: "Finance",
-      location: "New York, USA",
-      description: "Global investment banking, securities and investment management firm.",
-    },
-    {
-      id: "3",
-      title: "Harvard University",
-      category: "Education",
-      location: "Cambridge, USA",
-      description: "Premier Ivy League research university offering undergraduate and graduate programs.",
-    },
-    {
-      id: "4",
-      title: "Google",
-      category: "Technology",
-      location: "Mountain View, USA",
-      description: "Leading technology company specializing in internet services and products.",
-      featured: true,
-    },
-    {
-      id: "5",
-      title: "BBC News",
-      category: "News",
-      location: "London, UK",
-      description: "British public service broadcaster providing international news coverage.",
-    },
-    {
-      id: "6",
-      title: "Oxford University",
-      category: "Education",
-      location: "Oxford, UK",
-      description: "World-renowned research university and the oldest university in the English-speaking world.",
-    },
-  ];
+  const { data: listings = [], isLoading: listingsLoading } = useQuery<Listing[]>({
+    queryKey: ["/api/listings"],
+  });
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -98,11 +63,26 @@ export default function Home() {
         <section className="py-8 md:py-12 bg-muted/30">
           <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
             <h2 className="text-2xl font-semibold mb-6">Browse by Category</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {categories.map((category) => (
-                <CategoryCard key={category.href} {...category} />
-              ))}
-            </div>
+            {categoriesLoading ? (
+              <div className="text-center py-8 text-muted-foreground">Loading categories...</div>
+            ) : categories.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">No categories found. Add categories in the admin panel.</div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {categories.filter(c => !c.parentId).map((category) => {
+                  const IconComponent = iconMap[category.icon.toLowerCase()] || Briefcase;
+                  return (
+                    <CategoryCard
+                      key={category.slug}
+                      title={category.name}
+                      count={category.count}
+                      href={`/category/${category.slug}`}
+                      icon={IconComponent}
+                    />
+                  );
+                })}
+              </div>
+            )}
           </div>
         </section>
 
@@ -116,18 +96,37 @@ export default function Home() {
         <section className="py-8 md:py-12 bg-muted/30">
           <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-semibold">Featured Listings</h2>
+              <h2 className="text-2xl font-semibold">Recent Listings</h2>
               <Link href="/listings">
                 <Button variant="outline" size="sm" data-testid="button-view-all">
                   View All
                 </Button>
               </Link>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {featuredListings.map((listing) => (
-                <ListingCard key={listing.id} {...listing} />
-              ))}
-            </div>
+            {listingsLoading ? (
+              <div className="text-center py-8 text-muted-foreground">Loading listings...</div>
+            ) : listings.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No listings yet. <Link href="/submit" className="text-primary hover:underline">Submit the first listing</Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {listings.slice(0, 6).map((listing) => {
+                  const category = categories.find(c => c.id === listing.categoryId);
+                  return (
+                    <ListingCard
+                      key={listing.id}
+                      id={listing.id.toString()}
+                      title={listing.title}
+                      category={category?.name || "Uncategorized"}
+                      location={`Listing ${listing.id}`}
+                      description={listing.description}
+                      featured={listing.featured}
+                    />
+                  );
+                })}
+              </div>
+            )}
           </div>
         </section>
       </main>
