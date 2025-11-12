@@ -63,35 +63,49 @@ ${categorySql.join('\n\n')}`);
 
     // Countries
     if (countries.length > 0) {
-      const countrySql = countries.map(c =>
-        `INSERT INTO countries (name, slug) VALUES ('${c.name.replace(/'/g, "''")}', '${c.slug}') ON CONFLICT (slug) DO NOTHING;`
-      );
+      const countrySql = countries.map(c => {
+        const code = c.code ? `'${c.code}'` : 'NULL';
+        const continent = c.continent ? `'${c.continent.replace(/'/g, "''")}'` : 'NULL';
+        return `INSERT INTO countries (name, slug, flag, code, continent)
+VALUES ('${c.name.replace(/'/g, "''")}', '${c.slug}', '${c.flag}', ${code}, ${continent})
+ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, flag = EXCLUDED.flag, code = EXCLUDED.code, continent = EXCLUDED.continent;`;
+      });
       sqlParts.push(`\n\n-- ========================================
 -- COUNTRIES (${countries.length} total)
 -- ========================================
-${countrySql.join('\n')}`);
+${countrySql.join('\n\n')}`);
     }
 
     // Regions
     if (regions.length > 0) {
-      const regionSql = regions.map(r =>
-        `INSERT INTO regions (name, slug, country_id) VALUES ('${r.name.replace(/'/g, "''")}', '${r.slug}', ${r.countryId}) ON CONFLICT (slug) DO NOTHING;`
-      );
+      const regionSql = regions.map(r => {
+        const type = r.type ? `'${r.type.replace(/'/g, "''")}'` : 'NULL';
+        return `INSERT INTO regions (name, slug, country_id, type)
+VALUES ('${r.name.replace(/'/g, "''")}', '${r.slug}', ${r.countryId}, ${type})
+ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, country_id = EXCLUDED.country_id, type = EXCLUDED.type;`;
+      });
       sqlParts.push(`\n\n-- ========================================
 -- REGIONS (${regions.length} total)
 -- ========================================
-${regionSql.join('\n')}`);
+${regionSql.join('\n\n')}`);
     }
 
     // Cities
     if (cities.length > 0) {
-      const citySql = cities.map(c =>
-        `INSERT INTO cities (name, slug, country_id, region_id) VALUES ('${c.name.replace(/'/g, "''")}', '${c.slug}', ${c.countryId}, ${c.regionId || 'NULL'}) ON CONFLICT (slug) DO NOTHING;`
-      );
+      const citySql = cities.map(c => {
+        const regionId = c.regionId || 'NULL';
+        const population = c.population || 'NULL';
+        const isCapital = c.isCapital ? 'true' : 'false';
+        const latitude = c.latitude || 'NULL';
+        const longitude = c.longitude || 'NULL';
+        return `INSERT INTO cities (name, slug, country_id, region_id, population, is_capital, latitude, longitude)
+VALUES ('${c.name.replace(/'/g, "''")}', '${c.slug}', ${c.countryId}, ${regionId}, ${population}, ${isCapital}, ${latitude}, ${longitude})
+ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, country_id = EXCLUDED.country_id, region_id = EXCLUDED.region_id, population = EXCLUDED.population, is_capital = EXCLUDED.is_capital, latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude;`;
+      });
       sqlParts.push(`\n\n-- ========================================
 -- CITIES (${cities.length} total)
 -- ========================================
-${citySql.join('\n')}`);
+${citySql.join('\n\n')}`);
     }
 
     // Promotional Packages
