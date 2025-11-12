@@ -16,6 +16,7 @@ import AdminSubmissions from "@/pages/AdminSubmissions";
 import AdminListings from "@/pages/AdminListings";
 import AdminLocations from "@/pages/AdminLocations";
 import AdminUsers from "@/pages/AdminUsers";
+import AdminDatabaseTools from "@/pages/AdminDatabaseTools";
 import CategoryPage from "@/pages/CategoryPage";
 import ListingDetail from "@/pages/ListingDetail";
 
@@ -68,6 +69,11 @@ function Router() {
       <Route path="/admin/users">
         <ProtectedRoute>
           <AdminUsers />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/database-tools">
+        <ProtectedRoute>
+          <AdminDatabaseTools />
         </ProtectedRoute>
       </Route>
       <Route path="/category/:category" component={CategoryPage} />
