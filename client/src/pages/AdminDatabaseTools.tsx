@@ -27,24 +27,35 @@ export default function AdminDatabaseTools() {
       return;
     }
 
-    const sqlStatements = categories.map(cat => {
+    // Sort categories: parent categories first, then subcategories
+    const sortedCategories = [...categories].sort((a, b) => {
+      if (!a.parentId && b.parentId) return -1;
+      if (a.parentId && !b.parentId) return 1;
+      return 0;
+    });
+
+    const sqlStatements = sortedCategories.map(cat => {
       const parentIdValue = cat.parentId ? cat.parentId : 'NULL';
       const countValue = cat.count || 0;
       
-      return `INSERT INTO categories (name, slug, icon, parent_id, count) VALUES ('${cat.name.replace(/'/g, "''")}', '${cat.slug}', '${cat.icon}', ${parentIdValue}, ${countValue});`;
+      // Use INSERT with ON CONFLICT to update if slug already exists
+      return `INSERT INTO categories (name, slug, icon, parent_id, count)
+VALUES ('${cat.name.replace(/'/g, "''")}', '${cat.slug}', '${cat.icon}', ${parentIdValue}, ${countValue})
+ON CONFLICT (slug) DO UPDATE SET
+  name = EXCLUDED.name,
+  icon = EXCLUDED.icon,
+  parent_id = EXCLUDED.parent_id,
+  count = EXCLUDED.count;`;
     });
 
     const fullSql = `-- Categories Export from Development Database
 -- Generated: ${new Date().toLocaleString()}
 -- Total Categories: ${categories.length}
+-- This SQL uses ON CONFLICT to safely update existing categories
 
--- First, delete existing categories if needed (CAUTION!)
--- TRUNCATE TABLE categories CASCADE;
+${sqlStatements.join('\n\n')}
 
--- Insert categories
-${sqlStatements.join('\n')}
-
--- Done! ${categories.length} categories ready to import.`;
+-- Done! ${categories.length} categories imported/updated.`;
 
     setSqlOutput(fullSql);
     
