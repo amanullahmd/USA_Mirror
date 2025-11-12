@@ -42,13 +42,20 @@ export default function AdminLogin() {
       const response = await apiRequest("POST", "/api/admin/login", data);
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/session'] });
+    onSuccess: async () => {
+      // Invalidate and wait for refetch to complete
+      await queryClient.invalidateQueries({ queryKey: ['/api/admin/session'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/admin/session'] });
+      
       toast({
         title: "Login Successful",
         description: "Welcome to the admin panel!",
       });
-      setLocation("/admin/dashboard");
+      
+      // Small delay to ensure session is fully set
+      setTimeout(() => {
+        setLocation("/admin/dashboard");
+      }, 100);
     },
     onError: (error: any) => {
       toast({

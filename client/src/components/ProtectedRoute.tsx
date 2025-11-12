@@ -12,6 +12,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { data: session, isLoading } = useQuery({
     queryKey: ['/api/admin/session'],
     retry: false,
+    refetchOnMount: 'always',
+    staleTime: 0,
   });
 
   useEffect(() => {
