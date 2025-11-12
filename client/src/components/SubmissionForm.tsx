@@ -28,13 +28,14 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Loader2, Check, Image, Video, Star } from "lucide-react";
-import type { Category, Country, Region, PromotionalPackage } from "@shared/schema";
+import type { Category, Country, Region, City, PromotionalPackage } from "@shared/schema";
 
 const formSchema = z.object({
   businessName: z.string().min(2, "Business name must be at least 2 characters"),
   category: z.string().min(1, "Please select a category"),
   country: z.string().min(1, "Please select a country"),
-  city: z.string().min(1, "Please select a city/region"),
+  region: z.string().min(1, "Please select a state/province"),
+  city: z.string().optional(),
   description: z.string().min(10, "Description must be at least 10 characters"),
   contactPerson: z.string().min(2, "Contact person name is required"),
   phone: z.string().min(10, "Valid phone number is required"),
@@ -65,10 +66,16 @@ export default function SubmissionForm() {
   });
 
   const [selectedCountryId, setSelectedCountryId] = useState<number | null>(null);
+  const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
 
   const { data: regions = [] } = useQuery<Region[]>({
     queryKey: ["/api/regions", selectedCountryId],
     enabled: selectedCountryId !== null,
+  });
+
+  const { data: cities = [] } = useQuery<City[]>({
+    queryKey: ["/api/cities", selectedRegionId],
+    enabled: selectedRegionId !== null,
   });
 
   const form = useForm<FormData>({
@@ -77,6 +84,7 @@ export default function SubmissionForm() {
       businessName: "",
       category: "",
       country: "",
+      region: "",
       city: "",
       description: "",
       contactPerson: "",
@@ -96,7 +104,8 @@ export default function SubmissionForm() {
     mutationFn: async (data: FormData) => {
       const category = categories.find((c) => c.id.toString() === data.category);
       const country = countries.find((c) => c.id.toString() === data.country);
-      const region = regions.find((r) => r.id.toString() === data.city);
+      const region = regions.find((r) => r.id.toString() === data.region);
+      const city = data.city ? cities.find((c) => c.id.toString() === data.city) : null;
 
       if (!category || !country || !region) {
         throw new Error("Invalid selection");
@@ -108,6 +117,7 @@ export default function SubmissionForm() {
         categoryId: category.id,
         countryId: country.id,
         regionId: region.id,
+        cityId: city?.id || undefined,
         contactPerson: data.contactPerson,
         phone: data.phone,
         email: data.email,
@@ -145,6 +155,16 @@ export default function SubmissionForm() {
     const country = countries.find((c) => c.id.toString() === countryId);
     if (country) {
       setSelectedCountryId(country.id);
+      setSelectedRegionId(null);
+      form.setValue("region", "");
+      form.setValue("city", "");
+    }
+  }
+
+  function handleRegionChange(regionId: string) {
+    const region = regions.find((r) => r.id.toString() === regionId);
+    if (region) {
+      setSelectedRegionId(region.id);
       form.setValue("city", "");
     }
   }
@@ -253,14 +273,21 @@ export default function SubmissionForm() {
                 />
                 <FormField
                   control={form.control}
-                  name="city"
+                  name="region"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>City/Region</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCountryId}>
+                      <FormLabel>State/Province/Region</FormLabel>
+                      <Select 
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          handleRegionChange(value);
+                        }} 
+                        value={field.value} 
+                        disabled={!selectedCountryId}
+                      >
                         <FormControl>
-                          <SelectTrigger data-testid="select-city">
-                            <SelectValue placeholder={!selectedCountryId ? "Select country first" : "Select city/region"} />
+                          <SelectTrigger data-testid="select-region">
+                            <SelectValue placeholder={!selectedCountryId ? "Select country first" : "Select state/province"} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -268,13 +295,48 @@ export default function SubmissionForm() {
                             <SelectItem 
                               key={region.id} 
                               value={region.id.toString()}
-                              data-testid={`option-city-${region.id}`}
+                              data-testid={`option-region-${region.id}`}
                             >
                               {region.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>City (Optional)</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        value={field.value} 
+                        disabled={!selectedRegionId}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-city">
+                            <SelectValue placeholder={!selectedRegionId ? "Select state/province first" : cities.length === 0 ? "No cities available" : "Select city"} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {cities.map((city) => (
+                            <SelectItem 
+                              key={city.id} 
+                              value={city.id.toString()}
+                              data-testid={`option-city-${city.id}`}
+                            >
+                              {city.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Select a city if available, or leave blank to use state/province only
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

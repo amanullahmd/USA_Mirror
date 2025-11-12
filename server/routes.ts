@@ -167,6 +167,7 @@ export function registerRoutes(app: Express) {
             categoryId: submission.categoryId,
             countryId: submission.countryId,
             regionId: submission.regionId,
+            cityId: submission.cityId || undefined,
             contactPerson: submission.contactPerson,
             phone: submission.phone,
             email: submission.email,
