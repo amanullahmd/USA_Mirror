@@ -10,7 +10,29 @@ export function registerRoutes(app: Express) {
   // Categories
   app.get("/api/categories", async (req, res) => {
     try {
-      const categories = await storage.getCategories();
+      // Support filtering by parentId (for subcategories)
+      let parentId: number | null | undefined = undefined;
+      if (req.query.parentId === 'null') {
+        parentId = null; // Root categories only
+      } else if (req.query.parentId) {
+        const parsed = parseInt(req.query.parentId as string);
+        if (isNaN(parsed)) {
+          return res.status(400).json({ error: "Invalid parentId: must be a number or 'null'" });
+        }
+        parentId = parsed;
+      }
+      
+      // Support filtering by approval status
+      let approved: boolean | undefined = undefined;
+      if (req.query.approved === 'true') {
+        approved = true;
+      } else if (req.query.approved === 'false') {
+        approved = false;
+      } else if (req.query.approved !== undefined) {
+        return res.status(400).json({ error: "Invalid approved: must be 'true' or 'false'" });
+      }
+      
+      const categories = await storage.getCategories({ parentId, approved });
       res.json(categories);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch categories" });
@@ -309,6 +331,34 @@ export function registerRoutes(app: Express) {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete category" });
+    }
+  });
+
+  // Admin Routes - Category Approval
+  app.patch("/api/admin/categories/:id/approve", async (req, res) => {
+    try {
+      if (!req.session?.adminId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid category ID" });
+      }
+
+      const { approved } = req.body;
+      if (typeof approved !== 'boolean') {
+        return res.status(400).json({ error: "Approved must be a boolean value" });
+      }
+
+      const category = await storage.updateCategory(id, { approved });
+      if (!category) {
+        return res.status(404).json({ error: "Category not found" });
+      }
+
+      res.json(category);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update category approval status" });
     }
   });
 

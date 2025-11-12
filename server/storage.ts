@@ -14,11 +14,11 @@ import { eq, desc, and, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Categories
-  getCategories(): Promise<Category[]>;
+  getCategories(options?: { parentId?: number | null; approved?: boolean }): Promise<Category[]>;
   getCategoryBySlug(slug: string): Promise<Category | undefined>;
   getCategoryById(id: number): Promise<Category | undefined>;
   createCategory(category: InsertCategory): Promise<Category>;
-  updateCategory(id: number, category: Partial<InsertCategory>): Promise<Category | undefined>;
+  updateCategory(id: number, category: Partial<Omit<Category, 'id'>>): Promise<Category | undefined>;
   deleteCategory(id: number): Promise<void>;
   
   // Countries
@@ -81,8 +81,30 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   // Categories
-  async getCategories(): Promise<Category[]> {
-    return await db.select().from(categories).orderBy(categories.name);
+  async getCategories(options?: { parentId?: number | null; approved?: boolean }): Promise<Category[]> {
+    let query = db.select().from(categories);
+    
+    const conditions = [];
+    
+    // Filter by parentId (null = root categories, number = subcategories of that parent)
+    if (options?.parentId !== undefined) {
+      if (options.parentId === null) {
+        conditions.push(sql`${categories.parentId} IS NULL`);
+      } else {
+        conditions.push(eq(categories.parentId, options.parentId));
+      }
+    }
+    
+    // Filter by approval status
+    if (options?.approved !== undefined) {
+      conditions.push(eq(categories.approved, options.approved));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    return await query.orderBy(categories.name);
   }
 
   async getCategoryBySlug(slug: string): Promise<Category | undefined> {
@@ -100,7 +122,7 @@ export class DatabaseStorage implements IStorage {
     return category;
   }
 
-  async updateCategory(id: number, updateData: Partial<InsertCategory>): Promise<Category | undefined> {
+  async updateCategory(id: number, updateData: Partial<Omit<Category, 'id'>>): Promise<Category | undefined> {
     const [category] = await db.update(categories)
       .set(updateData)
       .where(eq(categories.id, id))
