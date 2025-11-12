@@ -3,6 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import SubmitPage from "@/pages/SubmitPage";
@@ -19,10 +20,26 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/submit" component={SubmitPage} />
       <Route path="/admin/login" component={AdminLogin} />
-      <Route path="/admin" component={AdminDashboard} />
-      <Route path="/admin/categories" component={AdminCategories} />
-      <Route path="/admin/packages" component={AdminPackages} />
-      <Route path="/admin/:section" component={AdminDashboard} />
+      <Route path="/admin">
+        <ProtectedRoute>
+          <AdminDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/dashboard">
+        <ProtectedRoute>
+          <AdminDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/categories">
+        <ProtectedRoute>
+          <AdminCategories />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/promotional-packages">
+        <ProtectedRoute>
+          <AdminPackages />
+        </ProtectedRoute>
+      </Route>
       <Route path="/category/:category" component={CategoryPage} />
       <Route path="/listing/:id" component={ListingDetail} />
       <Route component={NotFound} />

@@ -23,6 +23,7 @@ const categoryFormSchema = insertCategorySchema.extend({
   name: z.string().min(1, "Name is required"),
   slug: z.string().min(1, "Slug is required"),
   icon: z.string().min(1, "Icon is required"),
+  logoUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
 });
 
 type CategoryFormData = z.infer<typeof categoryFormSchema>;
@@ -44,6 +45,7 @@ export default function AdminCategories() {
       name: "",
       slug: "",
       icon: "",
+      logoUrl: "",
     },
   });
 
@@ -53,6 +55,7 @@ export default function AdminCategories() {
       name: "",
       slug: "",
       icon: "",
+      logoUrl: "",
     },
   });
 
@@ -132,6 +135,7 @@ export default function AdminCategories() {
       name: category.name,
       slug: category.slug,
       icon: category.icon,
+      logoUrl: category.logoUrl || "",
     });
     setEditDialogOpen(true);
   };
@@ -311,6 +315,23 @@ export default function AdminCategories() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={createForm.control}
+                name="logoUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Logo URL (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="https://example.com/logo.png"
+                        data-testid="input-category-logoUrl"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <DialogFooter>
                 <Button
                   type="button"
@@ -389,6 +410,23 @@ export default function AdminCategories() {
                         {...field}
                         placeholder="e.g., utensils"
                         data-testid="input-edit-category-icon"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="logoUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Logo URL (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="https://example.com/logo.png"
+                        data-testid="input-edit-category-logoUrl"
                       />
                     </FormControl>
                     <FormMessage />

@@ -2,6 +2,8 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -17,7 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Globe } from "lucide-react";
 
 const formSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
@@ -30,18 +32,35 @@ export default function AdminLogin() {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
 
+  const loginMutation = useMutation({
+    mutationFn: async (data: FormData) => {
+      const response = await apiRequest("POST", "/api/admin/login", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/session'] });
+      toast({
+        title: "Login Successful",
+        description: "Welcome to the admin panel!",
+      });
+      setLocation("/admin/dashboard");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Login Failed",
+        description: error.message || "Invalid credentials. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   function onSubmit(data: FormData) {
-    console.log("Login attempt:", data);
-    toast({
-      title: "Login Successful",
-      description: "Welcome to the admin panel!",
-    });
-    setLocation("/admin");
+    loginMutation.mutate(data);
   }
 
   return (
@@ -63,12 +82,17 @@ export default function AdminLogin() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="username"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter username" {...field} data-testid="input-username" />
+                      <Input 
+                        type="email" 
+                        placeholder="Enter your email" 
+                        {...field} 
+                        data-testid="input-email" 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -87,8 +111,13 @@ export default function AdminLogin() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" data-testid="button-login">
-                Login
+              <Button 
+                type="submit" 
+                className="w-full" 
+                data-testid="button-login"
+                disabled={loginMutation.isPending}
+              >
+                {loginMutation.isPending ? "Logging in..." : "Login"}
               </Button>
             </form>
           </Form>

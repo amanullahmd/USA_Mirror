@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { storage } from "./storage";
 import { insertSubmissionSchema, insertCategorySchema, insertPromotionalPackageSchema } from "@shared/schema";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import "./types";
 
 export function registerRoutes(app: Express) {
@@ -321,6 +322,14 @@ export function registerRoutes(app: Express) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
+      // Regenerate session to prevent session fixation
+      await new Promise<void>((resolve, reject) => {
+        req.session.regenerate((err: any) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+
       req.session.adminId = admin.id;
       req.session.email = admin.email;
       req.session.username = admin.username;
@@ -397,24 +406,25 @@ export function registerRoutes(app: Express) {
       
       // Always return success to prevent email enumeration
       if (!admin) {
-        return res.json({ success: true, message: "If the email exists, a reset link will be sent" });
+        return res.json({ success: true, message: "If the email exists, a reset code will be sent" });
       }
 
-      // Generate reset token (6-digit code for simplicity)
-      const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
+      // Generate cryptographically secure random token (32 bytes = 64 hex chars)
+      const resetToken = crypto.randomBytes(32).toString("hex");
       const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-      await storage.setPasswordResetToken(email, resetToken, expiry);
+      // Hash the token before storing
+      const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+      
+      await storage.setPasswordResetToken(email, hashedToken, expiry);
 
-      // In a real app, send email here. For now, just log it
-      console.log(`Password reset token for ${email}: ${resetToken}`);
-      console.log(`Token expires at: ${expiry}`);
-
+      // TODO: In production, send the resetToken via email to the user
+      // The token would be included in a password reset link
+      // For development, the token can be retrieved from the database if needed
+      
       res.json({ 
         success: true, 
-        message: "If the email exists, a reset link will be sent",
-        // TEMPORARY: In production, remove this debug info
-        debug: { token: resetToken, email }
+        message: "If the email exists, a reset code will be sent"
       });
     } catch (error) {
       res.status(500).json({ error: "Failed to process password reset" });
@@ -434,7 +444,10 @@ export function registerRoutes(app: Express) {
         return res.status(400).json({ error: "New password must be at least 6 characters" });
       }
 
-      const admin = await storage.getAdminByResetToken(token);
+      // Hash the provided token to compare with stored hashed version
+      const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+      
+      const admin = await storage.getAdminByResetToken(hashedToken);
       if (!admin) {
         return res.status(400).json({ error: "Invalid or expired reset token" });
       }
