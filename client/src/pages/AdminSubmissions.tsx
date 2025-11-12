@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   SidebarProvider,
@@ -23,26 +23,41 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Check, X, Eye, Loader2 } from "lucide-react";
+import { Check, X, Eye, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Submission } from "@shared/schema";
+import type { Submission, PaginatedResponse } from "@shared/schema";
 
 export default function AdminSubmissions() {
   const { toast } = useToast();
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
-  const { data: submissions, isLoading } = useQuery<Submission[]>({
-    queryKey: ["/api/submissions"],
+  const { data: submissionsResponse, isLoading } = useQuery<PaginatedResponse<Submission>>({
+    queryKey: [`/api/submissions?page=${currentPage}&pageSize=${pageSize}`],
   });
+
+  const submissions = submissionsResponse?.data || [];
+  const totalPages = submissionsResponse ? Math.ceil(submissionsResponse.total / submissionsResponse.pageSize) : 0;
+
+  // Adjust currentPage if it exceeds totalPages after data changes
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
 
   const approveMutation = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest("PATCH", `/api/submissions/${id}/status`, { status: "approved" });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/submissions"] });
+      queryClient.invalidateQueries({ 
+        predicate: ({ queryKey }) => 
+          typeof queryKey[0] === "string" && queryKey[0].startsWith("/api/submissions")
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/listings"] });
       toast({
         title: "Success",
@@ -63,7 +78,10 @@ export default function AdminSubmissions() {
       await apiRequest("PATCH", `/api/submissions/${id}/status`, { status: "rejected" });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/submissions"] });
+      queryClient.invalidateQueries({ 
+        predicate: ({ queryKey }) => 
+          typeof queryKey[0] === "string" && queryKey[0].startsWith("/api/submissions")
+      });
       toast({
         title: "Success",
         description: "Submission rejected",
@@ -192,6 +210,36 @@ export default function AdminSubmissions() {
                           ))}
                         </TableBody>
                       </Table>
+                    </div>
+                  )}
+                  
+                  {!isLoading && submissions.length > 0 && totalPages > 1 && (
+                    <div className="flex items-center justify-between gap-4 mt-4">
+                      <p className="text-sm text-muted-foreground">
+                        Page {currentPage} of {totalPages} ({submissionsResponse?.total || 0} total submissions)
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          data-testid="button-previous-page"
+                        >
+                          <ChevronLeft className="w-4 h-4 mr-1" />
+                          Previous
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                          data-testid="button-next-page"
+                        >
+                          Next
+                          <ChevronRight className="w-4 h-4 ml-1" />
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </CardContent>

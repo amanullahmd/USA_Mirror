@@ -316,14 +316,38 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Submissions
-  async getSubmissions(status?: string): Promise<Submission[]> {
-    let query = db.select().from(submissions);
+  async getSubmissions(status?: string, page: number = 1, pageSize: number = 10): Promise<PaginatedResponse<Submission>> {
+    // Ensure valid pagination parameters
+    const validPage = Math.max(1, page);
+    const validPageSize = Math.min(100, Math.max(1, pageSize)); // Cap at 100
+    const offset = (validPage - 1) * validPageSize;
     
-    if (status) {
-      query = query.where(eq(submissions.status, status)) as any;
+    // Build where condition
+    const whereCondition = status ? eq(submissions.status, status) : undefined;
+    
+    // Get total count
+    const countQuery = db.select({ count: sql<number>`count(*)::int` }).from(submissions);
+    const countResult = whereCondition 
+      ? await countQuery.where(whereCondition)
+      : await countQuery;
+    const total = countResult[0]?.count || 0;
+    
+    // Get paginated data
+    let dataQuery = db.select().from(submissions);
+    if (whereCondition) {
+      dataQuery = dataQuery.where(whereCondition) as any;
     }
+    const data = await dataQuery
+      .orderBy(desc(submissions.submittedAt))
+      .limit(validPageSize)
+      .offset(offset);
     
-    return await query.orderBy(desc(submissions.submittedAt));
+    return {
+      data,
+      page: validPage,
+      pageSize: validPageSize,
+      total,
+    };
   }
 
   async getSubmissionById(id: number): Promise<Submission | undefined> {

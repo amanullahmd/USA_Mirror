@@ -159,8 +159,19 @@ export function registerRoutes(app: Express) {
       }
 
       const status = req.query.status as string | undefined;
-      const submissions = await storage.getSubmissions(status);
-      res.json(submissions);
+      const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+      const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string, 10) : 10;
+      
+      // Validate pagination parameters
+      if (isNaN(page) || page < 1) {
+        return res.status(400).json({ error: "Invalid page parameter" });
+      }
+      if (isNaN(pageSize) || pageSize < 1 || pageSize > 100) {
+        return res.status(400).json({ error: "Invalid pageSize parameter (must be 1-100)" });
+      }
+      
+      const result = await storage.getSubmissions(status, page, pageSize);
+      res.json(result);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch submissions" });
     }
