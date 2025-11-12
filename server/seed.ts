@@ -5,15 +5,16 @@ import bcrypt from "bcrypt";
 async function seed() {
   console.log("Starting database seeding...");
 
-  const adminPassword = await bcrypt.hash("admin123", 10);
+  const adminPassword = await bcrypt.hash("USA@de", 10);
   const existingAdmin = await db.select().from(adminUsers).limit(1);
   
   if (existingAdmin.length === 0) {
     await db.insert(adminUsers).values({
       username: "admin",
+      email: "mumkhande@gmail.com",
       passwordHash: adminPassword,
     });
-    console.log("✅ Created admin user (username: admin, password: admin123)");
+    console.log("✅ Created admin user (email: mumkhande@gmail.com, password: USA@de)");
   } else {
     console.log("ℹ️  Admin user already exists");
   }

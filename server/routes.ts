@@ -305,13 +305,13 @@ export function registerRoutes(app: Express) {
   // Admin Authentication
   app.post("/api/admin/login", async (req, res) => {
     try {
-      const { username, password } = req.body;
+      const { email, password } = req.body;
 
-      if (!username || !password) {
-        return res.status(400).json({ error: "Username and password required" });
+      if (!email || !password) {
+        return res.status(400).json({ error: "Email and password required" });
       }
 
-      const admin = await storage.getAdminByUsername(username);
+      const admin = await storage.getAdminByEmail(email);
       if (!admin) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
@@ -322,9 +322,10 @@ export function registerRoutes(app: Express) {
       }
 
       req.session.adminId = admin.id;
+      req.session.email = admin.email;
       req.session.username = admin.username;
 
-      res.json({ success: true, username: admin.username });
+      res.json({ success: true, email: admin.email, username: admin.username });
     } catch (error) {
       res.status(500).json({ error: "Login failed" });
     }
@@ -341,9 +342,109 @@ export function registerRoutes(app: Express) {
 
   app.get("/api/admin/session", async (req, res) => {
     if (req.session?.adminId) {
-      res.json({ authenticated: true, username: req.session.username });
+      res.json({ authenticated: true, email: req.session.email, username: req.session.username });
     } else {
       res.json({ authenticated: false });
+    }
+  });
+
+  // Password Change
+  app.post("/api/admin/change-password", async (req, res) => {
+    try {
+      if (!req.session?.adminId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ error: "Current and new password required" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ error: "New password must be at least 6 characters" });
+      }
+
+      const admin = await storage.getAdminByEmail(req.session.email!);
+      if (!admin) {
+        return res.status(404).json({ error: "Admin not found" });
+      }
+
+      const isValid = await bcrypt.compare(currentPassword, admin.passwordHash);
+      if (!isValid) {
+        return res.status(401).json({ error: "Current password is incorrect" });
+      }
+
+      const newPasswordHash = await bcrypt.hash(newPassword, 10);
+      await storage.updateAdminPassword(admin.id, newPasswordHash);
+
+      res.json({ success: true, message: "Password changed successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to change password" });
+    }
+  });
+
+  // Password Recovery - Request Reset
+  app.post("/api/admin/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ error: "Email required" });
+      }
+
+      const admin = await storage.getAdminByEmail(email);
+      
+      // Always return success to prevent email enumeration
+      if (!admin) {
+        return res.json({ success: true, message: "If the email exists, a reset link will be sent" });
+      }
+
+      // Generate reset token (6-digit code for simplicity)
+      const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+      await storage.setPasswordResetToken(email, resetToken, expiry);
+
+      // In a real app, send email here. For now, just log it
+      console.log(`Password reset token for ${email}: ${resetToken}`);
+      console.log(`Token expires at: ${expiry}`);
+
+      res.json({ 
+        success: true, 
+        message: "If the email exists, a reset link will be sent",
+        // TEMPORARY: In production, remove this debug info
+        debug: { token: resetToken, email }
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to process password reset" });
+    }
+  });
+
+  // Password Recovery - Reset with Token
+  app.post("/api/admin/reset-password", async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+
+      if (!token || !newPassword) {
+        return res.status(400).json({ error: "Token and new password required" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ error: "New password must be at least 6 characters" });
+      }
+
+      const admin = await storage.getAdminByResetToken(token);
+      if (!admin) {
+        return res.status(400).json({ error: "Invalid or expired reset token" });
+      }
+
+      const newPasswordHash = await bcrypt.hash(newPassword, 10);
+      await storage.updateAdminPassword(admin.id, newPasswordHash);
+
+      res.json({ success: true, message: "Password reset successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to reset password" });
     }
   });
 }

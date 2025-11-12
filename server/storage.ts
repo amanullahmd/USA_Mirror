@@ -53,7 +53,11 @@ export interface IStorage {
   
   // Admin Users
   getAdminByUsername(username: string): Promise<AdminUser | undefined>;
-  createAdmin(username: string, passwordHash: string): Promise<AdminUser>;
+  getAdminByEmail(email: string): Promise<AdminUser | undefined>;
+  createAdmin(username: string, email: string, passwordHash: string): Promise<AdminUser>;
+  updateAdminPassword(id: number, passwordHash: string): Promise<AdminUser | undefined>;
+  setPasswordResetToken(email: string, token: string, expiry: Date): Promise<AdminUser | undefined>;
+  getAdminByResetToken(token: string): Promise<AdminUser | undefined>;
   
   // Stats
   getStats(): Promise<{
@@ -239,9 +243,39 @@ export class DatabaseStorage implements IStorage {
     return admin || undefined;
   }
 
-  async createAdmin(username: string, passwordHash: string): Promise<AdminUser> {
-    const [admin] = await db.insert(adminUsers).values({ username, passwordHash }).returning();
+  async getAdminByEmail(email: string): Promise<AdminUser | undefined> {
+    const [admin] = await db.select().from(adminUsers).where(eq(adminUsers.email, email));
+    return admin || undefined;
+  }
+
+  async createAdmin(username: string, email: string, passwordHash: string): Promise<AdminUser> {
+    const [admin] = await db.insert(adminUsers).values({ username, email, passwordHash }).returning();
     return admin;
+  }
+
+  async updateAdminPassword(id: number, passwordHash: string): Promise<AdminUser | undefined> {
+    const [admin] = await db.update(adminUsers)
+      .set({ passwordHash, resetToken: null, resetTokenExpiry: null })
+      .where(eq(adminUsers.id, id))
+      .returning();
+    return admin || undefined;
+  }
+
+  async setPasswordResetToken(email: string, token: string, expiry: Date): Promise<AdminUser | undefined> {
+    const [admin] = await db.update(adminUsers)
+      .set({ resetToken: token, resetTokenExpiry: expiry })
+      .where(eq(adminUsers.email, email))
+      .returning();
+    return admin || undefined;
+  }
+
+  async getAdminByResetToken(token: string): Promise<AdminUser | undefined> {
+    const [admin] = await db.select().from(adminUsers)
+      .where(and(
+        eq(adminUsers.resetToken, token),
+        sql`${adminUsers.resetTokenExpiry} > NOW()`
+      ));
+    return admin || undefined;
   }
 
   // Stats

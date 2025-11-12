@@ -7,6 +7,7 @@ export const categories = pgTable("categories", {
   name: text("name").notNull().unique(),
   slug: text("slug").notNull().unique(),
   icon: text("icon").notNull(),
+  logoUrl: text("logo_url"),
   count: integer("count").notNull().default(0),
 });
 
@@ -78,7 +79,10 @@ export const submissions = pgTable("submissions", {
 export const adminUsers = pgTable("admin_users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
+  resetToken: text("reset_token"),
+  resetTokenExpiry: timestamp("reset_token_expiry"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
