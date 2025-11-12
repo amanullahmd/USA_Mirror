@@ -7,21 +7,26 @@ The USA Mirror is a comprehensive global business and service directory platform
 ## Recent Changes
 
 **Phase 1 Completed (November 12, 2025):** Global Geographic Data Expansion
-- ✅ Enhanced database schema with comprehensive geographic hierarchy:
+- ✅ **Phase 1.1 & 1.2** - Enhanced database schema with comprehensive geographic hierarchy:
   - Added `cities` table (name, slug, regionId, countryId, population, isCapital, latitude, longitude)
   - Enhanced `countries` table with ISO codes (code) and continent classification
   - Enhanced `regions` table with type field (state, province, territory, etc.)
-- ✅ Seeded global geographic data:
-  - 196 countries worldwide (all continents) with ISO codes, flags, and continent classification
-  - 232 regions across 10 major countries (US, Canada, UK, India, Australia, China, Germany, France, Brazil, Mexico)
-  - 196 capital cities with coordinates and population data
-- ✅ API endpoints for geographic data:
+  - Seeded 196 countries worldwide (all continents) with ISO codes, flags
+  - Seeded 232 regions across 10 major countries (US, Canada, UK, India, Australia, China, Germany, France, Brazil, Mexico)
+  - Seeded 196 capital cities with coordinates and population data
+- ✅ **Phase 1.2** - API endpoints for geographic data:
   - GET /api/countries - List all countries
   - GET /api/regions?countryId=X - List regions (optionally filtered by country)
-  - GET /api/cities?countryId=X&regionId=Y&isCapital=true - List cities with flexible filtering
-- ✅ Storage interface updated with cities methods (getCities, getCityById, createCity)
-- Geographic hierarchy established: countries → regions → cities
-- All API endpoints tested and working correctly
+  - GET /api/cities?countryId=X&regionId=Y&isCapital=true/false - List cities with flexible filtering
+  - Storage interface updated with cities methods (getCities, getCityById, createCity)
+- ✅ **Phase 1.3** - Frontend forms updated with geographic hierarchy:
+  - Added optional `cityId` field to listings and submissions tables
+  - Updated SubmissionForm with cascading dropdowns: Country → Region → City (Optional)
+  - Proper UX: dropdowns disabled until parent selected, clear labels, help text
+  - Backend routes updated to handle optional cityId in submission approval
+  - API tested: submissions work correctly with and without city selection
+- Geographic hierarchy fully implemented: countries → regions → cities
+- All endpoints tested and working correctly with proper filtering
 
 **Next Phase:** User Authentication System (signup/login, email verification, CAPTCHA)
 
