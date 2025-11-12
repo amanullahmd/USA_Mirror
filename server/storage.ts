@@ -6,8 +6,9 @@ import {
   type Listing, type InsertListing,
   type Submission, type InsertSubmission,
   type AdminUser,
+  type User,
   type PromotionalPackage, type InsertPromotionalPackage,
-  categories, countries, regions, cities, listings, submissions, adminUsers, promotionalPackages
+  categories, countries, regions, cities, listings, submissions, adminUsers, users, promotionalPackages
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -69,6 +70,18 @@ export interface IStorage {
   updateAdminPassword(id: number, passwordHash: string): Promise<AdminUser | undefined>;
   setPasswordResetToken(email: string, token: string, expiry: Date): Promise<AdminUser | undefined>;
   getAdminByResetToken(token: string): Promise<AdminUser | undefined>;
+  
+  // Users
+  getUserByEmail(email: string): Promise<User | undefined>;
+  getUserById(id: number): Promise<User | undefined>;
+  createUser(user: { email: string; passwordHash: string; firstName?: string; lastName?: string; phone?: string }): Promise<User>;
+  updateUser(id: number, data: Partial<Omit<User, 'id'>>): Promise<User | undefined>;
+  setVerificationToken(userId: number, tokenHash: string, expiry: Date): Promise<User | undefined>;
+  getUserByVerificationToken(tokenHash: string): Promise<User | undefined>;
+  verifyUserEmail(userId: number): Promise<User | undefined>;
+  setUserPasswordResetToken(email: string, tokenHash: string, expiry: Date): Promise<User | undefined>;
+  getUserByPasswordResetToken(tokenHash: string): Promise<User | undefined>;
+  updateUserPassword(id: number, passwordHash: string): Promise<User | undefined>;
   
   // Stats
   getStats(): Promise<{
@@ -368,6 +381,88 @@ export class DatabaseStorage implements IStorage {
         sql`${adminUsers.resetTokenExpiry} > NOW()`
       ));
     return admin || undefined;
+  }
+
+  // Users
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async getUserById(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: { email: string; passwordHash: string; firstName?: string; lastName?: string; phone?: string }): Promise<User> {
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
+  }
+
+  async updateUser(id: number, data: Partial<Omit<User, 'id'>>): Promise<User | undefined> {
+    const [user] = await db.update(users)
+      .set(data)
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
+  }
+
+  async setVerificationToken(userId: number, tokenHash: string, expiry: Date): Promise<User | undefined> {
+    const [user] = await db.update(users)
+      .set({ verificationTokenHash: tokenHash, verificationTokenExpiry: expiry })
+      .where(eq(users.id, userId))
+      .returning();
+    return user || undefined;
+  }
+
+  async getUserByVerificationToken(tokenHash: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users)
+      .where(and(
+        eq(users.verificationTokenHash, tokenHash),
+        sql`${users.verificationTokenExpiry} > NOW()`
+      ));
+    return user || undefined;
+  }
+
+  async verifyUserEmail(userId: number): Promise<User | undefined> {
+    const [user] = await db.update(users)
+      .set({ 
+        emailVerified: true, 
+        verificationTokenHash: null, 
+        verificationTokenExpiry: null 
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user || undefined;
+  }
+
+  async setUserPasswordResetToken(email: string, tokenHash: string, expiry: Date): Promise<User | undefined> {
+    const [user] = await db.update(users)
+      .set({ resetTokenHash: tokenHash, resetTokenExpiry: expiry })
+      .where(eq(users.email, email))
+      .returning();
+    return user || undefined;
+  }
+
+  async getUserByPasswordResetToken(tokenHash: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users)
+      .where(and(
+        eq(users.resetTokenHash, tokenHash),
+        sql`${users.resetTokenExpiry} > NOW()`
+      ));
+    return user || undefined;
+  }
+
+  async updateUserPassword(id: number, passwordHash: string): Promise<User | undefined> {
+    const [user] = await db.update(users)
+      .set({ 
+        passwordHash, 
+        resetTokenHash: null, 
+        resetTokenExpiry: null 
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
   }
 
   // Stats

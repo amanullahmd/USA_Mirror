@@ -43,7 +43,52 @@ The USA Mirror is a comprehensive global business and service directory platform
   - Password reset routes integrated with auth utilities
 - Database migrated, application tested and running
 
-**Next Phase:** Admin Features Batch (positioning system + subcategories + category approval), then User Authentication (Phase 2)
+**Admin Features Completed (November 12, 2025):** Positioning & Category Management
+- ✅ **Listing Positioning System**:
+  - API endpoints: POST /api/admin/listings/:id/position, DELETE /api/admin/listings/:id/position
+  - Integer validation (prevents decimal positions)
+  - Duplicate position prevention (per category)
+  - Duration-based expiry with automatic cleanup
+  - Auto-cleanup on listing fetch
+  - Sorting: positioned listings first (1, 2, 3...), then by creation date
+- ✅ **Subcategory System**:
+  - Hierarchical categories with parentId relationships
+  - API filtering: GET /api/categories?parentId=X&approved=true/false
+  - Root categories: ?parentId=null
+  - Subcategories: ?parentId=<number>
+  - Input validation for query parameters
+- ✅ **Category Approval Workflow**:
+  - PATCH /api/admin/categories/:id/approve
+  - Support for user-created categories (createdBy, createdByUserId fields)
+  - Approval status filtering in public API
+
+**Phase 2 Completed (November 12, 2025):** User Authentication System
+- ✅ **User Storage Layer**:
+  - Complete user CRUD operations
+  - Email verification token management
+  - Password reset token management
+  - Secure token hashing (SHA-256) before storage
+- ✅ **Authentication API**:
+  - POST /api/auth/signup - User registration with auto-login
+  - POST /api/auth/login - User login with session management
+  - POST /api/auth/logout - Session destruction
+  - GET /api/auth/session - Check authentication status
+  - POST /api/auth/verify-email - Email verification with tokens
+  - POST /api/auth/forgot-password - Password reset request
+  - POST /api/auth/reset-password - Password reset with token
+- ✅ **Security Features**:
+  - BCrypt password hashing (10 rounds)
+  - SHA-256 token hashing for storage
+  - Session regeneration on login/signup (prevents fixation)
+  - Token expiry validation (24h verification, 1h password reset)
+  - Email enumeration prevention
+  - Auto-cleanup of verification/reset tokens
+- ✅ **Development Features**:
+  - Tokens logged to console in development mode
+  - Email service integration ready (deferred - requires SMTP config)
+- ✅ **Testing**: Authentication flow verified (signup, email verification, password reset)
+
+**Next Phase:** Phase 2 Completion (user dashboard, connect users to submissions), then Phase 3 (document uploads, field configuration)
 
 ## User Preferences
 
