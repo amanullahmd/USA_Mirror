@@ -2,11 +2,12 @@ import {
   type Category, type InsertCategory,
   type Country, type InsertCountry,
   type Region, type InsertRegion,
+  type City, type InsertCity,
   type Listing, type InsertListing,
   type Submission, type InsertSubmission,
   type AdminUser,
   type PromotionalPackage, type InsertPromotionalPackage,
-  categories, countries, regions, listings, submissions, adminUsers, promotionalPackages
+  categories, countries, regions, cities, listings, submissions, adminUsers, promotionalPackages
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -30,6 +31,11 @@ export interface IStorage {
   getRegionsByCountry(countryId: number): Promise<Region[]>;
   getRegionBySlug(slug: string): Promise<Region | undefined>;
   createRegion(region: InsertRegion): Promise<Region>;
+  
+  // Cities
+  getCities(options?: { countryId?: number; regionId?: number; isCapital?: boolean }): Promise<City[]>;
+  getCityById(id: number): Promise<City | undefined>;
+  createCity(city: InsertCity): Promise<City>;
   
   // Promotional Packages
   getPromotionalPackages(): Promise<PromotionalPackage[]>;
@@ -133,6 +139,32 @@ export class DatabaseStorage implements IStorage {
   async createRegion(insertRegion: InsertRegion): Promise<Region> {
     const [region] = await db.insert(regions).values(insertRegion).returning();
     return region;
+  }
+
+  // Cities
+  async getCities(options?: { countryId?: number; regionId?: number; isCapital?: boolean }): Promise<City[]> {
+    let query = db.select().from(cities);
+    
+    const conditions = [];
+    if (options?.countryId) conditions.push(eq(cities.countryId, options.countryId));
+    if (options?.regionId) conditions.push(eq(cities.regionId, options.regionId));
+    if (options?.isCapital !== undefined) conditions.push(eq(cities.isCapital, options.isCapital));
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    return await query.orderBy(cities.name);
+  }
+
+  async getCityById(id: number): Promise<City | undefined> {
+    const [city] = await db.select().from(cities).where(eq(cities.id, id));
+    return city || undefined;
+  }
+
+  async createCity(insertCity: InsertCity): Promise<City> {
+    const [city] = await db.insert(cities).values(insertCity).returning();
+    return city;
   }
 
   // Promotional Packages

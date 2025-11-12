@@ -63,6 +63,26 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Cities
+  app.get("/api/cities", async (req, res) => {
+    try {
+      const countryId = req.query.countryId ? parseInt(req.query.countryId as string) : undefined;
+      const regionId = req.query.regionId ? parseInt(req.query.regionId as string) : undefined;
+      
+      let isCapital: boolean | undefined = undefined;
+      if (req.query.isCapital === 'true') {
+        isCapital = true;
+      } else if (req.query.isCapital === 'false') {
+        isCapital = false;
+      }
+      
+      const cities = await storage.getCities({ countryId, regionId, isCapital });
+      res.json(cities);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch cities" });
+    }
+  });
+
   // Listings
   app.get("/api/listings", async (req, res) => {
     try {
