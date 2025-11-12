@@ -4,6 +4,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { createServer } from "http";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
+import { seedAdminUser } from "./utils/seedAdmin";
 
 const app = express();
 const server = createServer(app);
@@ -69,6 +70,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Seed admin user on startup (works in both dev and production)
+  await seedAdminUser();
+  
   registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
