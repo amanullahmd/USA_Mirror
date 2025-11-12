@@ -51,6 +51,11 @@ export interface IStorage {
   createListing(listing: InsertListing): Promise<Listing>;
   incrementListingViews(id: number): Promise<void>;
   
+  // Listing Positioning
+  setListingPosition(listingId: number, position: number, expiresAt: Date | null): Promise<Listing | undefined>;
+  clearListingPosition(listingId: number): Promise<Listing | undefined>;
+  clearExpiredPositions(): Promise<number>; // Returns count of cleared positions
+  
   // Submissions
   getSubmissions(status?: string): Promise<Submission[]>;
   getSubmissionById(id: number): Promise<Submission | undefined>;
@@ -203,6 +208,9 @@ export class DatabaseStorage implements IStorage {
 
   // Listings
   async getListings(options?: { categoryId?: number; countryId?: number; regionId?: number; featured?: boolean; limit?: number }): Promise<Listing[]> {
+    // Auto-cleanup expired positions before fetching
+    await this.clearExpiredPositions();
+    
     let query = db.select().from(listings);
     
     const conditions = [];
@@ -215,7 +223,12 @@ export class DatabaseStorage implements IStorage {
       query = query.where(and(...conditions)) as any;
     }
     
-    query = query.orderBy(desc(listings.createdAt)) as any;
+    // Sort by position first (positioned listings on top), then by createdAt for non-positioned
+    query = query.orderBy(
+      sql`CASE WHEN ${listings.position} IS NULL THEN 1 ELSE 0 END`, // Positioned first
+      sql`${listings.position} NULLS LAST`, // Sort by position value
+      desc(listings.createdAt) // Then by creation date
+    ) as any;
     
     if (options?.limit) {
       query = query.limit(options.limit) as any;
@@ -238,6 +251,31 @@ export class DatabaseStorage implements IStorage {
     await db.update(listings)
       .set({ views: sql`${listings.views} + 1` })
       .where(eq(listings.id, id));
+  }
+
+  // Listing Positioning
+  async setListingPosition(listingId: number, position: number, expiresAt: Date | null): Promise<Listing | undefined> {
+    const [listing] = await db.update(listings)
+      .set({ position, positionExpiresAt: expiresAt })
+      .where(eq(listings.id, listingId))
+      .returning();
+    return listing || undefined;
+  }
+
+  async clearListingPosition(listingId: number): Promise<Listing | undefined> {
+    const [listing] = await db.update(listings)
+      .set({ position: null, positionExpiresAt: null })
+      .where(eq(listings.id, listingId))
+      .returning();
+    return listing || undefined;
+  }
+
+  async clearExpiredPositions(): Promise<number> {
+    const result = await db.update(listings)
+      .set({ position: null, positionExpiresAt: null })
+      .where(sql`${listings.positionExpiresAt} IS NOT NULL AND ${listings.positionExpiresAt} <= NOW()`)
+      .returning();
+    return result.length;
   }
 
   // Submissions

@@ -312,6 +312,87 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Admin Routes - Listing Positioning
+  app.post("/api/admin/listings/:id/position", async (req, res) => {
+    try {
+      if (!req.session?.adminId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const listingId = parseInt(req.params.id);
+      const { position, durationHours } = req.body;
+
+      // Validate position is a positive integer
+      if (typeof position !== 'number' || position < 1 || !Number.isInteger(position)) {
+        return res.status(400).json({ error: "Position must be a positive integer" });
+      }
+
+      // Get the listing to check its category
+      const listing = await storage.getListingById(listingId);
+      if (!listing) {
+        return res.status(404).json({ error: "Listing not found" });
+      }
+
+      // Check if position is already occupied in the same category
+      const categoryListings = await storage.getListings({ categoryId: listing.categoryId });
+      const existingPosition = categoryListings.find(
+        l => l.id !== listingId && l.position === position
+      );
+      if (existingPosition) {
+        return res.status(409).json({ 
+          error: `Position ${position} is already occupied by listing #${existingPosition.id}` 
+        });
+      }
+
+      // Calculate expiry if duration is provided
+      let expiresAt: Date | null = null;
+      if (durationHours && durationHours > 0) {
+        expiresAt = new Date(Date.now() + durationHours * 60 * 60 * 1000);
+      }
+
+      const updatedListing = await storage.setListingPosition(listingId, position, expiresAt);
+      res.json(updatedListing);
+    } catch (error: any) {
+      if (error.message?.includes('unique constraint')) {
+        res.status(409).json({ error: "Position already occupied in this category" });
+      } else {
+        res.status(500).json({ error: "Failed to set listing position" });
+      }
+    }
+  });
+
+  app.delete("/api/admin/listings/:id/position", async (req, res) => {
+    try {
+      if (!req.session?.adminId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const listingId = parseInt(req.params.id);
+      const listing = await storage.clearListingPosition(listingId);
+      
+      if (!listing) {
+        return res.status(404).json({ error: "Listing not found" });
+      }
+
+      res.json(listing);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to clear listing position" });
+    }
+  });
+
+  app.post("/api/admin/listings/cleanup-positions", async (req, res) => {
+    try {
+      if (!req.session?.adminId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const count = await storage.clearExpiredPositions();
+      res.json({ success: true, clearedCount: count });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to cleanup expired positions" });
+    }
+  });
+
   // Stats
   app.get("/api/admin/stats", async (req, res) => {
     try {
