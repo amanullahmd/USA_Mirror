@@ -52,10 +52,8 @@ export default function AdminLogin() {
         description: "Welcome to the admin panel!",
       });
       
-      // Small delay to ensure session is fully set
-      setTimeout(() => {
-        setLocation("/admin/dashboard");
-      }, 100);
+      // Use window.location for reliable redirect
+      window.location.href = "/admin/dashboard";
     },
     onError: (error: any) => {
       toast({
