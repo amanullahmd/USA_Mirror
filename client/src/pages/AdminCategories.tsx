@@ -1,4 +1,5 @@
 import { useState } from "react";
+import React from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AdminSidebar from "@/components/AdminSidebar";
@@ -8,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -24,6 +26,7 @@ const categoryFormSchema = insertCategorySchema.extend({
   slug: z.string().min(1, "Slug is required"),
   icon: z.string().min(1, "Icon is required"),
   logoUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  parentId: z.number().optional().nullable(),
 });
 
 type CategoryFormData = z.infer<typeof categoryFormSchema>;
@@ -46,6 +49,7 @@ export default function AdminCategories() {
       slug: "",
       icon: "",
       logoUrl: "",
+      parentId: null,
     },
   });
 
@@ -56,6 +60,7 @@ export default function AdminCategories() {
       slug: "",
       icon: "",
       logoUrl: "",
+      parentId: null,
     },
   });
 
@@ -136,6 +141,7 @@ export default function AdminCategories() {
       slug: category.slug,
       icon: category.icon,
       logoUrl: category.logoUrl || "",
+      parentId: category.parentId || null,
     });
     setEditDialogOpen(true);
   };
@@ -207,41 +213,79 @@ export default function AdminCategories() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {categories?.map((category) => (
-                          <TableRow key={category.id} data-testid={`row-category-${category.id}`}>
-                            <TableCell className="font-medium" data-testid={`text-category-name-${category.id}`}>
-                              {category.name}
-                            </TableCell>
-                            <TableCell data-testid={`text-category-slug-${category.id}`}>
-                              {category.slug}
-                            </TableCell>
-                            <TableCell data-testid={`text-category-icon-${category.id}`}>
-                              {category.icon}
-                            </TableCell>
-                            <TableCell className="text-right" data-testid={`text-category-count-${category.id}`}>
-                              {category.count}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleEdit(category)}
-                                  data-testid={`button-edit-category-${category.id}`}
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleDeleteClick(category)}
-                                  data-testid={`button-delete-category-${category.id}`}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
+                        {categories?.filter(c => !c.parentId).map((category) => (
+                          <React.Fragment key={category.id}>
+                            <TableRow data-testid={`row-category-${category.id}`}>
+                              <TableCell className="font-medium" data-testid={`text-category-name-${category.id}`}>
+                                {category.name}
+                              </TableCell>
+                              <TableCell data-testid={`text-category-slug-${category.id}`}>
+                                {category.slug}
+                              </TableCell>
+                              <TableCell data-testid={`text-category-icon-${category.id}`}>
+                                {category.icon}
+                              </TableCell>
+                              <TableCell className="text-right" data-testid={`text-category-count-${category.id}`}>
+                                {category.count}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleEdit(category)}
+                                    data-testid={`button-edit-category-${category.id}`}
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleDeleteClick(category)}
+                                    data-testid={`button-delete-category-${category.id}`}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                            {categories?.filter(sub => sub.parentId === category.id).map((subcategory) => (
+                              <TableRow key={subcategory.id} data-testid={`row-category-${subcategory.id}`} className="bg-muted/30">
+                                <TableCell className="font-medium pl-8" data-testid={`text-category-name-${subcategory.id}`}>
+                                  ↳ {subcategory.name}
+                                </TableCell>
+                                <TableCell data-testid={`text-category-slug-${subcategory.id}`}>
+                                  {subcategory.slug}
+                                </TableCell>
+                                <TableCell data-testid={`text-category-icon-${subcategory.id}`}>
+                                  {subcategory.icon}
+                                </TableCell>
+                                <TableCell className="text-right" data-testid={`text-category-count-${subcategory.id}`}>
+                                  {subcategory.count}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleEdit(subcategory)}
+                                      data-testid={`button-edit-category-${subcategory.id}`}
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleDeleteClick(subcategory)}
+                                      data-testid={`button-delete-category-${subcategory.id}`}
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </React.Fragment>
                         ))}
                       </TableBody>
                     </Table>
@@ -328,6 +372,34 @@ export default function AdminCategories() {
                         data-testid="input-category-logoUrl"
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={createForm.control}
+                name="parentId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Parent Category (Optional)</FormLabel>
+                    <Select
+                      value={field.value?.toString() || "none"}
+                      onValueChange={(value) => field.onChange(value === "none" ? null : parseInt(value))}
+                    >
+                      <FormControl>
+                        <SelectTrigger data-testid="select-parent-category">
+                          <SelectValue placeholder="Select parent category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">None (Top-level category)</SelectItem>
+                        {categories?.filter(c => !c.parentId).map((category) => (
+                          <SelectItem key={category.id} value={category.id.toString()}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -429,6 +501,34 @@ export default function AdminCategories() {
                         data-testid="input-edit-category-logoUrl"
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="parentId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Parent Category (Optional)</FormLabel>
+                    <Select
+                      value={field.value?.toString() || "none"}
+                      onValueChange={(value) => field.onChange(value === "none" ? null : parseInt(value))}
+                    >
+                      <FormControl>
+                        <SelectTrigger data-testid="select-edit-parent-category">
+                          <SelectValue placeholder="Select parent category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">None (Top-level category)</SelectItem>
+                        {categories?.filter(c => !c.parentId && c.id !== selectedCategory?.id).map((category) => (
+                          <SelectItem key={category.id} value={category.id.toString()}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

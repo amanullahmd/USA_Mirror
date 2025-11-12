@@ -32,7 +32,8 @@ import type { Category, Country, Region, City, PromotionalPackage } from "@share
 
 const formSchema = z.object({
   businessName: z.string().min(2, "Business name must be at least 2 characters"),
-  category: z.string().min(1, "Please select a category"),
+  parentCategory: z.string().min(1, "Please select a category"),
+  subcategory: z.string().optional(),
   country: z.string().min(1, "Please select a country"),
   region: z.string().min(1, "Please select a state/province"),
   city: z.string().optional(),
@@ -82,7 +83,8 @@ export default function SubmissionForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       businessName: "",
-      category: "",
+      parentCategory: "",
+      subcategory: "",
       country: "",
       region: "",
       city: "",
@@ -98,11 +100,16 @@ export default function SubmissionForm() {
     },
   });
 
+  const parentCategoryId = form.watch("parentCategory");
+  const subcategories = categories.filter(c => c.parentId === (parentCategoryId ? parseInt(parentCategoryId) : null));
+  const parentCategories = categories.filter(c => !c.parentId);
   const listingType = form.watch("listingType");
 
   const submitMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const category = categories.find((c) => c.id.toString() === data.category);
+      // Use subcategory if selected, otherwise use parent category
+      const finalCategoryId = data.subcategory || data.parentCategory;
+      const category = categories.find((c) => c.id.toString() === finalCategoryId);
       const country = countries.find((c) => c.id.toString() === data.country);
       const region = regions.find((r) => r.id.toString() === data.region);
       const city = data.city ? cities.find((c) => c.id.toString() === data.city) : null;
@@ -135,6 +142,8 @@ export default function SubmissionForm() {
         description: "Your listing will be reviewed by our team shortly.",
       });
       form.reset();
+      setSelectedCountryId(null);
+      setSelectedRegionId(null);
       setStep(1);
       queryClient.invalidateQueries({ queryKey: ["/api/submissions"] });
     },
@@ -210,18 +219,26 @@ export default function SubmissionForm() {
                 />
                 <FormField
                   control={form.control}
-                  name="category"
+                  name="parentCategory"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Category</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={categoriesLoading}>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Reset subcategory when parent changes
+                          form.setValue("subcategory", "");
+                        }}
+                        value={field.value}
+                        disabled={categoriesLoading}
+                      >
                         <FormControl>
                           <SelectTrigger data-testid="select-category">
                             <SelectValue placeholder={categoriesLoading ? "Loading..." : "Select category"} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {categories.map((cat) => (
+                          {parentCategories.map((cat) => (
                             <SelectItem 
                               key={cat.id} 
                               value={cat.id.toString()}
@@ -236,6 +253,40 @@ export default function SubmissionForm() {
                     </FormItem>
                   )}
                 />
+                {subcategories.length > 0 && (
+                  <FormField
+                    control={form.control}
+                    name="subcategory"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Subcategory (Optional)</FormLabel>
+                        <Select onValueChange={(value) => field.onChange(value === "NONE" ? "" : value)} value={field.value || "NONE"}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-subcategory">
+                              <SelectValue placeholder="Select subcategory (optional)" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="NONE">None (use main category)</SelectItem>
+                            {subcategories.map((cat) => (
+                              <SelectItem 
+                                key={cat.id} 
+                                value={cat.id.toString()}
+                                data-testid={`option-subcategory-${cat.id}`}
+                              >
+                                {cat.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Leave as "None" to list under the main category
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
                 <FormField
                   control={form.control}
                   name="country"
