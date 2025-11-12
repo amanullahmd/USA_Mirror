@@ -11,6 +11,7 @@ import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminCategories from "@/pages/AdminCategories";
 import AdminPackages from "@/pages/AdminPackages";
+import AdminSettings from "@/pages/AdminSettings";
 import CategoryPage from "@/pages/CategoryPage";
 import ListingDetail from "@/pages/ListingDetail";
 
@@ -38,6 +39,11 @@ function Router() {
       <Route path="/admin/promotional-packages">
         <ProtectedRoute>
           <AdminPackages />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/settings">
+        <ProtectedRoute>
+          <AdminSettings />
         </ProtectedRoute>
       </Route>
       <Route path="/category/:category" component={CategoryPage} />

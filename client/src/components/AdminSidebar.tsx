@@ -1,4 +1,4 @@
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useRoute } from "wouter";
 import {
   Sidebar,
   SidebarContent,
@@ -14,9 +14,37 @@ import {
 import { LayoutDashboard, Inbox, List, FolderTree, MapPin, Package, Settings, LogOut } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminSidebar() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
+  const { toast } = useToast();
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/admin/logout");
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Logged out successfully",
+      });
+      setLocation("/admin/login");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
 
   const menuItems = [
     { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
@@ -66,9 +94,15 @@ export default function AdminSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="p-4">
-        <Button variant="ghost" className="w-full justify-start gap-2" data-testid="button-logout">
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start gap-2" 
+          data-testid="button-logout"
+          onClick={handleLogout}
+          disabled={logoutMutation.isPending}
+        >
           <LogOut className="w-4 h-4" />
-          Logout
+          {logoutMutation.isPending ? "Logging out..." : "Logout"}
         </Button>
       </SidebarFooter>
     </Sidebar>
