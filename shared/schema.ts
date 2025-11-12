@@ -227,3 +227,18 @@ export type ListingView = typeof listingViews.$inferSelect;
 export type InsertListingView = z.infer<typeof insertListingViewSchema>;
 export type FieldConfig = typeof fieldConfigs.$inferSelect;
 export type InsertFieldConfig = z.infer<typeof insertFieldConfigSchema>;
+
+// Paginated Response Schema
+export const paginatedResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) => z.object({
+  data: z.array(itemSchema),
+  page: z.number().int().positive(),
+  pageSize: z.number().int().positive(),
+  total: z.number().int().nonnegative(),
+});
+
+export type PaginatedResponse<T> = {
+  data: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+};

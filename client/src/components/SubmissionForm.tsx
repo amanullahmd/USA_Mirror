@@ -68,14 +68,17 @@ export default function SubmissionForm() {
   const [selectedCountryId, setSelectedCountryId] = useState<number | null>(null);
   const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
 
+  const regionsUrl = selectedCountryId ? `/api/regions?countryId=${selectedCountryId}` : null;
+  const citiesUrl = selectedRegionId ? `/api/cities?regionId=${selectedRegionId}` : null;
+
   const { data: regions = [] } = useQuery<Region[]>({
-    queryKey: ["/api/regions", selectedCountryId],
-    enabled: selectedCountryId !== null,
+    queryKey: [regionsUrl!],
+    enabled: regionsUrl !== null,
   });
 
   const { data: cities = [] } = useQuery<City[]>({
-    queryKey: ["/api/cities", selectedRegionId],
-    enabled: selectedRegionId !== null,
+    queryKey: [citiesUrl!],
+    enabled: citiesUrl !== null,
   });
 
   const form = useForm<FormData>({

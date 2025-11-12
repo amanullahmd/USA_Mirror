@@ -8,6 +8,7 @@ import {
   type AdminUser,
   type User,
   type PromotionalPackage, type InsertPromotionalPackage,
+  type PaginatedResponse,
   categories, countries, regions, cities, listings, submissions, adminUsers, users, promotionalPackages
 } from "@shared/schema";
 import { db } from "./db";
@@ -58,7 +59,7 @@ export interface IStorage {
   clearExpiredPositions(): Promise<number>; // Returns count of cleared positions
   
   // Submissions
-  getSubmissions(status?: string): Promise<Submission[]>;
+  getSubmissions(status?: string, page?: number, pageSize?: number): Promise<PaginatedResponse<Submission>>;
   getSubmissionById(id: number): Promise<Submission | undefined>;
   createSubmission(submission: InsertSubmission): Promise<Submission>;
   updateSubmissionStatus(id: number, status: string): Promise<Submission | undefined>;
