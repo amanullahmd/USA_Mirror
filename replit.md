@@ -56,14 +56,27 @@ Preferred communication style: Simple, everyday language.
 - `/api/countries` - Country and region data
 - `/api/listings` - Public listing queries with filtering
 - `/api/submissions` - User-submitted listings awaiting approval
+- `/api/admin/login` - Email-based admin login with session regeneration
+- `/api/admin/logout` - Admin logout and session destruction
+- `/api/admin/session` - Check current admin session status
+- `/api/admin/change-password` - Password change for logged-in admin
+- `/api/admin/forgot-password` - Request password reset token via email
+- `/api/admin/reset-password` - Reset password using token
 - `/api/admin/*` - Protected admin endpoints for content management
 - `/api/admin/promotional-packages` - Promotional package CRUD
 
 **Authentication & Authorization:**
-- Admin-only routes protected by session middleware
-- Password-based authentication with BCrypt hashing
+- Email-based authentication system for admin access
+- Admin credentials: mumkhande@gmail.com / USA@de
+- Session regeneration on login prevents session fixation attacks
+- Admin-only routes protected by session middleware (backend + frontend)
+- Frontend route protection via ProtectedRoute component
+- Password-based authentication with BCrypt hashing (salt rounds: 10)
+- Password recovery system with crypto-random tokens (32 bytes)
+- Reset tokens hashed with SHA-256 before storage
 - Session stored in PostgreSQL for persistence across restarts
 - Credentials passed via session cookies (httpOnly, secure in production)
+- Password change endpoint for logged-in admins
 
 ### Data Architecture
 
@@ -73,8 +86,9 @@ Preferred communication style: Simple, everyday language.
 
 1. **categories**
    - Hierarchical categorization system (News, Business, Education, etc.)
-   - Contains: id, name, slug, icon, count
+   - Contains: id, name, slug, icon, logoUrl (optional), count
    - Enables faceted navigation and filtering
+   - Supports custom category logos/images via URL
 
 2. **countries**
    - Geographic organization at country level
@@ -105,8 +119,11 @@ Preferred communication style: Simple, everyday language.
 
 7. **admin_users**
    - Admin authentication
-   - Contains: username, passwordHash
-   - BCrypt-hashed passwords for security
+   - Contains: email, passwordHash, resetToken, resetTokenExpiry
+   - Email-based authentication (mumkhande@gmail.com)
+   - BCrypt-hashed passwords for security (salt rounds: 10)
+   - Crypto-random reset tokens (32 bytes) hashed with SHA-256
+   - Token expiry (1 hour) for password recovery
 
 8. **session** (auto-created by connect-pg-simple)
    - Session persistence across server restarts
