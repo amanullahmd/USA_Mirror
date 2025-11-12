@@ -6,10 +6,15 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
+interface SessionData {
+  authenticated: boolean;
+  email?: string;
+}
+
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [, setLocation] = useLocation();
 
-  const { data: session, isLoading } = useQuery({
+  const { data: session, isLoading } = useQuery<SessionData>({
     queryKey: ['/api/admin/session'],
     retry: false,
     refetchOnMount: 'always',
