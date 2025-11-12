@@ -3,6 +3,7 @@ import { storage } from "./storage";
 import { insertSubmissionSchema, insertCategorySchema, insertPromotionalPackageSchema } from "@shared/schema";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+import { generateResetToken, hashToken } from "./utils/auth";
 import "./types";
 
 export function registerRoutes(app: Express) {
@@ -430,12 +431,8 @@ export function registerRoutes(app: Express) {
         return res.json({ success: true, message: "If the email exists, a reset code will be sent" });
       }
 
-      // Generate cryptographically secure random token (32 bytes = 64 hex chars)
-      const resetToken = crypto.randomBytes(32).toString("hex");
-      const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-
-      // Hash the token before storing
-      const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+      // Generate cryptographically secure reset token with hash
+      const { token: resetToken, hash: hashedToken, expiry } = generateResetToken(0.25); // 15 minutes
       
       await storage.setPasswordResetToken(email, hashedToken, expiry);
 
@@ -466,7 +463,7 @@ export function registerRoutes(app: Express) {
       }
 
       // Hash the provided token to compare with stored hashed version
-      const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+      const hashedToken = hashToken(token);
       
       const admin = await storage.getAdminByResetToken(hashedToken);
       if (!admin) {

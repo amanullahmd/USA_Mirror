@@ -28,7 +28,22 @@ The USA Mirror is a comprehensive global business and service directory platform
 - Geographic hierarchy fully implemented: countries → regions → cities
 - All endpoints tested and working correctly with proper filtering
 
-**Next Phase:** User Authentication System (signup/login, email verification, CAPTCHA)
+**Schema Overhaul Completed (November 12, 2025):** Foundation for All Planned Features
+- ✅ **Comprehensive Schema Updates**:
+  - Reorganized table order: users → adminUsers → categories (proper FK references)
+  - Security improvements: hashed tokens (resetTokenHash, verificationTokenHash), hashed IPs (ipAddressHash)
+  - New tables: users (auth), listingViews (analytics), fieldConfigs (dynamic forms)
+  - Feature columns: position/positionExpiresAt (listings), parentId/createdBy/approved (categories), userId (ownership), documentUrl
+  - Fixed unique constraint: (category_id, position) WHERE position IS NOT NULL (allows multiple NULL positions)
+- ✅ **Auth Utilities Created** (server/utils/auth.ts):
+  - Token generation/hashing, IP hashing for privacy
+  - generateResetToken(), generateVerificationToken()
+- ✅ **Storage & Routes Updated**:
+  - Storage methods use hashed tokens (resetTokenHash)
+  - Password reset routes integrated with auth utilities
+- Database migrated, application tested and running
+
+**Next Phase:** Admin Features Batch (positioning system + subcategories + category approval), then User Authentication (Phase 2)
 
 ## User Preferences
 

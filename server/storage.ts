@@ -287,24 +287,24 @@ export class DatabaseStorage implements IStorage {
 
   async updateAdminPassword(id: number, passwordHash: string): Promise<AdminUser | undefined> {
     const [admin] = await db.update(adminUsers)
-      .set({ passwordHash, resetToken: null, resetTokenExpiry: null })
+      .set({ passwordHash, resetTokenHash: null, resetTokenExpiry: null })
       .where(eq(adminUsers.id, id))
       .returning();
     return admin || undefined;
   }
 
-  async setPasswordResetToken(email: string, token: string, expiry: Date): Promise<AdminUser | undefined> {
+  async setPasswordResetToken(email: string, tokenHash: string, expiry: Date): Promise<AdminUser | undefined> {
     const [admin] = await db.update(adminUsers)
-      .set({ resetToken: token, resetTokenExpiry: expiry })
+      .set({ resetTokenHash: tokenHash, resetTokenExpiry: expiry })
       .where(eq(adminUsers.email, email))
       .returning();
     return admin || undefined;
   }
 
-  async getAdminByResetToken(token: string): Promise<AdminUser | undefined> {
+  async getAdminByResetToken(tokenHash: string): Promise<AdminUser | undefined> {
     const [admin] = await db.select().from(adminUsers)
       .where(and(
-        eq(adminUsers.resetToken, token),
+        eq(adminUsers.resetTokenHash, tokenHash),
         sql`${adminUsers.resetTokenExpiry} > NOW()`
       ));
     return admin || undefined;
