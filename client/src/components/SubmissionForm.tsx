@@ -46,6 +46,15 @@ const formSchema = z.object({
   videoUrl: z.string().url("Valid video URL is required").or(z.literal("")),
   listingType: z.enum(["free", "promotional"]),
   packageId: z.string().optional(),
+}).refine((data) => {
+  // If promotional listing is selected, packageId is required
+  if (data.listingType === "promotional" && !data.packageId) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Please select a promotional package",
+  path: ["packageId"], // This will show the error under the packageId field
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -411,7 +420,17 @@ export default function SubmissionForm() {
                   )}
                 />
                 <div className="flex justify-end">
-                  <Button type="button" onClick={() => setStep(2)} data-testid="button-next-step-1">
+                  <Button 
+                    type="button" 
+                    onClick={async () => {
+                      // Validate step 1 fields before proceeding
+                      const step1Fields = await form.trigger(["businessName", "parentCategory", "country", "region", "description"]);
+                      if (step1Fields) {
+                        setStep(2);
+                      }
+                    }} 
+                    data-testid="button-next-step-1"
+                  >
                     Next
                   </Button>
                 </div>
@@ -510,7 +529,17 @@ export default function SubmissionForm() {
                   <Button type="button" variant="outline" onClick={() => setStep(1)} data-testid="button-back-step-2">
                     Back
                   </Button>
-                  <Button type="button" onClick={() => setStep(3)} data-testid="button-next-step-2">
+                  <Button 
+                    type="button" 
+                    onClick={async () => {
+                      // Validate step 2 fields before proceeding
+                      const step2Fields = await form.trigger(["contactPerson", "phone", "email", "website", "imageUrl", "videoUrl"]);
+                      if (step2Fields) {
+                        setStep(3);
+                      }
+                    }} 
+                    data-testid="button-next-step-2"
+                  >
                     Next
                   </Button>
                 </div>
