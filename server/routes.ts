@@ -858,6 +858,35 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Database Schema Export (CREATE TABLE statements)
+  app.get("/api/admin/export-schema", async (req, res) => {
+    try {
+      if (!req.session?.adminId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      
+      // Read ALL migration files and combine them
+      const migrationsDir = path.join(process.cwd(), 'migrations');
+      const files = await fs.readdir(migrationsDir);
+      const sqlFiles = files
+        .filter(f => f.endsWith('.sql'))
+        .sort(); // Sort to get them in order
+      
+      let combinedSchema = '';
+      for (const file of sqlFiles) {
+        const content = await fs.readFile(path.join(migrationsDir, file), 'utf-8');
+        combinedSchema += content + '\n\n';
+      }
+      
+      res.type('text/plain').send(combinedSchema);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to export schema" });
+    }
+  });
+
   // Database Export Tool
   app.get("/api/admin/export-sql", async (req, res) => {
     try {
@@ -960,6 +989,29 @@ ON CONFLICT (name) DO UPDATE SET price = EXCLUDED.price, duration_days = EXCLUDE
 ${packageSql.join('\n\n')}`);
       }
 
+      // Sequence resets - CRITICAL for preventing ID collisions!
+      const sequenceResets = [];
+      if (categories.length > 0) {
+        const maxId = Math.max(...categories.map(c => c.id));
+        sequenceResets.push(`SELECT setval('categories_id_seq', ${maxId}, true);`);
+      }
+      if (countries.length > 0) {
+        const maxId = Math.max(...countries.map(c => c.id));
+        sequenceResets.push(`SELECT setval('countries_id_seq', ${maxId}, true);`);
+      }
+      if (regions.length > 0) {
+        const maxId = Math.max(...regions.map(r => r.id));
+        sequenceResets.push(`SELECT setval('regions_id_seq', ${maxId}, true);`);
+      }
+      if (cities.length > 0) {
+        const maxId = Math.max(...cities.map(c => c.id));
+        sequenceResets.push(`SELECT setval('cities_id_seq', ${maxId}, true);`);
+      }
+      if (packages.length > 0) {
+        const maxId = Math.max(...packages.map(p => p.id));
+        sequenceResets.push(`SELECT setval('promotional_packages_id_seq', ${maxId}, true);`);
+      }
+
       const fullSql = `-- ========================================
 -- REFERENCE DATA EXPORT
 -- Generated: ${new Date().toLocaleString()}
@@ -968,10 +1020,20 @@ ${packageSql.join('\n\n')}`);
 --        ${regions.length} regions, ${cities.length} cities, ${packages.length} packages
 --
 -- This SQL uses ON CONFLICT to safely insert/update data
+-- Includes sequence resets to prevent ID collisions
 -- Safe to run multiple times
 -- ========================================
 
+BEGIN;
+
 ${sqlParts.join('\n')}
+
+-- ========================================
+-- RESET SEQUENCES (Prevents ID Collisions!)
+-- ========================================
+${sequenceResets.join('\n')}
+
+COMMIT;
 
 -- ========================================
 -- IMPORT COMPLETE!

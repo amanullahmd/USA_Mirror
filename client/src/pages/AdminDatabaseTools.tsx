@@ -13,6 +13,7 @@ import type { Category } from "@shared/schema";
 export default function AdminDatabaseTools() {
   const { toast } = useToast();
   const [sqlOutput, setSqlOutput] = useState("");
+  const [schemaOutput, setSchemaOutput] = useState("");
 
   const { data: categories = [], isLoading: categoriesLoading } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
@@ -80,7 +81,7 @@ export default function AdminDatabaseTools() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `complete-database-export-${Date.now()}.sql`;
+    a.download = `data-export-${Date.now()}.sql`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -88,8 +89,104 @@ export default function AdminDatabaseTools() {
 
     toast({
       title: "Downloaded!",
-      description: "SQL file downloaded successfully.",
+      description: "Data export file downloaded successfully.",
     });
+  };
+
+  const downloadSchema = async () => {
+    try {
+      const response = await fetch('/api/admin/export-schema');
+      if (!response.ok) {
+        throw new Error('Failed to fetch schema');
+      }
+      const schema = await response.text();
+      setSchemaOutput(schema);
+
+      const blob = new Blob([schema], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `schema-${Date.now()}.sql`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Downloaded!",
+        description: "Database schema downloaded successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to download schema.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const downloadHostingerPackage = async () => {
+    try {
+      // Get schema
+      const schemaResponse = await fetch('/api/admin/export-schema');
+      if (!schemaResponse.ok) throw new Error('Failed to fetch schema');
+      const schema = await schemaResponse.text();
+
+      // Get data
+      const dataResponse = await fetch('/api/admin/export-sql');
+      if (!dataResponse.ok) throw new Error('Failed to fetch data');
+      const data = await dataResponse.text();
+
+      // Combine them
+      const complete = `-- ========================================
+-- THE USA MIRROR - COMPLETE DATABASE EXPORT
+-- FOR HOSTINGER POSTGRESQL DEPLOYMENT
+-- Generated: ${new Date().toLocaleString()}
+-- ========================================
+--
+-- INSTRUCTIONS:
+-- 1. Create a new PostgreSQL database in Hostinger
+-- 2. Run this ENTIRE file in phpPgAdmin or your database manager
+-- 3. The schema will be created first, then data will be imported
+--
+-- ========================================
+
+-- STEP 1: CREATE TABLES (Schema)
+-- ========================================
+
+${schema}
+
+-- ========================================
+-- STEP 2: INSERT DATA
+-- ========================================
+
+${data}
+
+-- ========================================
+-- DEPLOYMENT COMPLETE!
+-- ========================================`;
+
+      const blob = new Blob([complete], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `hostinger-complete-deployment-${Date.now()}.sql`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Downloaded!",
+        description: "Complete Hostinger deployment package downloaded.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create deployment package.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -219,27 +316,51 @@ export default function AdminDatabaseTools() {
                     
                     <TabsContent value="hostinger" className="space-y-3">
                       <div className="bg-purple-50 dark:bg-purple-950 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
-                        <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">
-                          🌐 Import to Hostinger PostgreSQL:
+                        <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-3">
+                          🌐 Complete Hostinger Deployment Package
+                        </h4>
+                        <p className="text-sm text-purple-800 dark:text-purple-200 mb-4">
+                          Download a single SQL file that contains both the database schema (CREATE TABLE statements) and all your data. Perfect for deploying to Hostinger!
+                        </p>
+                        
+                        <Button
+                          onClick={downloadHostingerPackage}
+                          disabled={isLoading}
+                          size="lg"
+                          className="w-full mb-4"
+                          data-testid="button-download-hostinger-package"
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Download Complete Hostinger Package
+                        </Button>
+
+                        <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-2 mt-4">
+                          📝 Deployment Instructions:
                         </h4>
                         <ol className="text-sm text-purple-800 dark:text-purple-200 space-y-2 list-decimal list-inside">
-                          <li>Click "Generate Complete SQL Export" above</li>
-                          <li>Click "Download" to save the SQL file to your computer</li>
+                          <li>Click "Download Complete Hostinger Package" button above</li>
                           <li>Login to your Hostinger control panel (hPanel)</li>
-                          <li>Go to "Databases" → Find your PostgreSQL database</li>
-                          <li>Click "phpPgAdmin" or "Manage" to open database manager</li>
-                          <li>Make sure your tables exist first (run schema creation if needed)</li>
-                          <li>Click "SQL" tab and paste the downloaded SQL</li>
-                          <li>Click "Execute" to import all data</li>
+                          <li>Go to "Databases" → Create or select a PostgreSQL database</li>
+                          <li>Click "phpPgAdmin" or "Manage" to open the database manager</li>
+                          <li>Click the "SQL" tab at the top</li>
+                          <li>Open the downloaded file and copy ALL the SQL content</li>
+                          <li>Paste it into the SQL query box</li>
+                          <li>Click "Execute" to create tables and import all data</li>
+                          <li>Your database is now ready on Hostinger!</li>
                         </ol>
-                        <div className="mt-3 p-3 bg-purple-100 dark:bg-purple-900 rounded">
-                          <p className="text-xs text-purple-900 dark:text-purple-100 font-semibold mb-1">
-                            ⚠️ Important:
+                        
+                        <div className="mt-4 p-3 bg-purple-100 dark:bg-purple-900 rounded">
+                          <p className="text-xs text-purple-900 dark:text-purple-100 font-semibold mb-2">
+                            📦 What's included in the package:
                           </p>
-                          <p className="text-xs text-purple-800 dark:text-purple-200">
-                            Make sure your Hostinger database has the same table structure (schema) as this app. 
-                            You may need to run the database schema creation SQL first before importing this data.
-                          </p>
+                          <ul className="text-xs text-purple-800 dark:text-purple-200 space-y-1 list-disc list-inside">
+                            <li>Complete database schema (all 11 tables)</li>
+                            <li>All {categories.length} categories with hierarchical structure</li>
+                            <li>All {countries.length} countries with flags and codes</li>
+                            <li>All {regions.length} regions (states/provinces)</li>
+                            <li>All {cities.length} cities with geographic data</li>
+                            <li>All {packages.length} promotional packages</li>
+                          </ul>
                         </div>
                       </div>
                     </TabsContent>
