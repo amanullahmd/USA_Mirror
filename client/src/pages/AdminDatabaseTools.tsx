@@ -194,20 +194,56 @@ export default function AdminDatabaseTools() {
                     </div>
                   )}
 
-                  <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                    <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                      📝 How to Import to Production:
-                    </h4>
-                    <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-2 list-decimal list-inside">
-                      <li>Click "Generate Complete SQL Export" above</li>
-                      <li>Click "Copy" to copy all SQL to your clipboard</li>
-                      <li>Open the Replit Database pane (left sidebar)</li>
-                      <li>Switch to the "Production" tab at the top</li>
-                      <li>Click "SQL Runner" or "Query" button</li>
-                      <li>Paste the SQL statements and click "Run"</li>
-                      <li>All your data will now be in production!</li>
-                    </ol>
-                  </div>
+                  <Tabs defaultValue="replit" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="replit">Replit Production</TabsTrigger>
+                      <TabsTrigger value="hostinger">Hostinger / External DB</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="replit" className="space-y-3">
+                      <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                        <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                          📝 Import to Replit Production Database:
+                        </h4>
+                        <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-2 list-decimal list-inside">
+                          <li>Click "Generate Complete SQL Export" above</li>
+                          <li>Click "Copy" to copy all SQL to your clipboard</li>
+                          <li>Open the Replit Database pane (left sidebar)</li>
+                          <li>Switch to the "Production" tab at the top</li>
+                          <li>Click "SQL Runner" or "Query" button</li>
+                          <li>Paste the SQL statements and click "Run"</li>
+                          <li>All your data will now be in production!</li>
+                        </ol>
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="hostinger" className="space-y-3">
+                      <div className="bg-purple-50 dark:bg-purple-950 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                        <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">
+                          🌐 Import to Hostinger PostgreSQL:
+                        </h4>
+                        <ol className="text-sm text-purple-800 dark:text-purple-200 space-y-2 list-decimal list-inside">
+                          <li>Click "Generate Complete SQL Export" above</li>
+                          <li>Click "Download" to save the SQL file to your computer</li>
+                          <li>Login to your Hostinger control panel (hPanel)</li>
+                          <li>Go to "Databases" → Find your PostgreSQL database</li>
+                          <li>Click "phpPgAdmin" or "Manage" to open database manager</li>
+                          <li>Make sure your tables exist first (run schema creation if needed)</li>
+                          <li>Click "SQL" tab and paste the downloaded SQL</li>
+                          <li>Click "Execute" to import all data</li>
+                        </ol>
+                        <div className="mt-3 p-3 bg-purple-100 dark:bg-purple-900 rounded">
+                          <p className="text-xs text-purple-900 dark:text-purple-100 font-semibold mb-1">
+                            ⚠️ Important:
+                          </p>
+                          <p className="text-xs text-purple-800 dark:text-purple-200">
+                            Make sure your Hostinger database has the same table structure (schema) as this app. 
+                            You may need to run the database schema creation SQL first before importing this data.
+                          </p>
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
 
                   <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4">
                     <h4 className="font-semibold text-green-900 dark:text-green-100 mb-2">
