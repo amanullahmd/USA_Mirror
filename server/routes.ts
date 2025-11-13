@@ -857,4 +857,129 @@ export function registerRoutes(app: Express) {
       res.status(500).json({ error: "Failed to reset password" });
     }
   });
+
+  // Database Export Tool
+  app.get("/api/admin/export-sql", async (req, res) => {
+    try {
+      if (!req.session?.adminId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const sqlParts: string[] = [];
+
+      // Categories
+      const categories = await storage.getCategories({});
+      if (categories.length > 0) {
+        const sortedCategories = [...categories].sort((a, b) => {
+          if (!a.parentId && b.parentId) return -1;
+          if (a.parentId && !b.parentId) return 1;
+          return 0;
+        });
+
+        const categorySql = sortedCategories.map(cat => {
+          const parentIdValue = cat.parentId ? cat.parentId : 'NULL';
+          const countValue = cat.count || 0;
+          const name = cat.name.replace(/'/g, "''");
+          return `INSERT INTO categories (name, slug, icon, parent_id, count)
+VALUES ('${name}', '${cat.slug}', '${cat.icon}', ${parentIdValue}, ${countValue})
+ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, icon = EXCLUDED.icon, parent_id = EXCLUDED.parent_id, count = EXCLUDED.count;`;
+        });
+
+        sqlParts.push(`-- ========================================
+-- CATEGORIES (${categories.length} total)
+-- ========================================
+${categorySql.join('\n\n')}`);
+      }
+
+      // Countries
+      const countries = await storage.getCountries();
+      if (countries.length > 0) {
+        const countrySql = countries.map(c => {
+          const name = c.name.replace(/'/g, "''");
+          const code = c.code ? `'${c.code}'` : 'NULL';
+          const continent = c.continent ? `'${c.continent.replace(/'/g, "''")}'` : 'NULL';
+          return `INSERT INTO countries (name, slug, flag, code, continent)
+VALUES ('${name}', '${c.slug}', '${c.flag}', ${code}, ${continent})
+ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, flag = EXCLUDED.flag, code = EXCLUDED.code, continent = EXCLUDED.continent;`;
+        });
+        sqlParts.push(`\n\n-- ========================================
+-- COUNTRIES (${countries.length} total)
+-- ========================================
+${countrySql.join('\n\n')}`);
+      }
+
+      // Regions
+      const regions = await storage.getRegions();
+      if (regions.length > 0) {
+        const regionSql = regions.map(r => {
+          const name = r.name.replace(/'/g, "''");
+          const type = r.type ? `'${r.type.replace(/'/g, "''")}'` : 'NULL';
+          return `INSERT INTO regions (name, slug, country_id, type)
+VALUES ('${name}', '${r.slug}', ${r.countryId}, ${type})
+ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, country_id = EXCLUDED.country_id, type = EXCLUDED.type;`;
+        });
+        sqlParts.push(`\n\n-- ========================================
+-- REGIONS (${regions.length} total)
+-- ========================================
+${regionSql.join('\n\n')}`);
+      }
+
+      // Cities
+      const cities = await storage.getCities();
+      if (cities.length > 0) {
+        const citySql = cities.map(c => {
+          const name = c.name.replace(/'/g, "''");
+          const regionId = c.regionId || 'NULL';
+          const population = c.population || 'NULL';
+          const isCapital = c.isCapital ? 'true' : 'false';
+          const latitude = c.latitude || 'NULL';
+          const longitude = c.longitude || 'NULL';
+          return `INSERT INTO cities (name, slug, country_id, region_id, population, is_capital, latitude, longitude)
+VALUES ('${name}', '${c.slug}', ${c.countryId}, ${regionId}, ${population}, ${isCapital}, ${latitude}, ${longitude})
+ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, country_id = EXCLUDED.country_id, region_id = EXCLUDED.region_id, population = EXCLUDED.population, is_capital = EXCLUDED.is_capital, latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude;`;
+        });
+        sqlParts.push(`\n\n-- ========================================
+-- CITIES (${cities.length} total)
+-- ========================================
+${citySql.join('\n\n')}`);
+      }
+
+      // Promotional Packages
+      const packages = await storage.getPromotionalPackages();
+      if (packages.length > 0) {
+        const packageSql = packages.map(p => {
+          const name = p.name.replace(/'/g, "''");
+          const featuresStr = JSON.stringify(p.features).replace(/'/g, "''");
+          return `INSERT INTO promotional_packages (name, price, duration_days, features, active)
+VALUES ('${name}', ${p.price}, ${p.durationDays}, '${featuresStr}'::jsonb, ${p.active})
+ON CONFLICT (name) DO UPDATE SET price = EXCLUDED.price, duration_days = EXCLUDED.duration_days, features = EXCLUDED.features, active = EXCLUDED.active;`;
+        });
+        sqlParts.push(`\n\n-- ========================================
+-- PROMOTIONAL PACKAGES (${packages.length} total)
+-- ========================================
+${packageSql.join('\n\n')}`);
+      }
+
+      const fullSql = `-- ========================================
+-- REFERENCE DATA EXPORT
+-- Generated: ${new Date().toLocaleString()}
+-- ========================================
+-- Total: ${categories.length} categories, ${countries.length} countries, 
+--        ${regions.length} regions, ${cities.length} cities, ${packages.length} packages
+--
+-- This SQL uses ON CONFLICT to safely insert/update data
+-- Safe to run multiple times
+-- ========================================
+
+${sqlParts.join('\n')}
+
+-- ========================================
+-- IMPORT COMPLETE!
+-- ========================================`;
+
+      res.type('text/plain').send(fullSql);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to generate SQL export" });
+    }
+  });
 }

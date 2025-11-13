@@ -36,115 +36,27 @@ export default function AdminDatabaseTools() {
 
   const isLoading = categoriesLoading || countriesLoading || regionsLoading || citiesLoading || packagesLoading;
 
-  const generateAllDataSql = () => {
-    let sqlParts: string[] = [];
+  const generateAllDataSql = async () => {
+    try {
+      const response = await fetch('/api/admin/export-sql');
+      if (!response.ok) {
+        throw new Error('Failed to generate SQL');
+      }
+      const sql = await response.text();
+      setSqlOutput(sql);
 
-    // Categories
-    if (categories.length > 0) {
-      const sortedCategories = [...categories].sort((a, b) => {
-        if (!a.parentId && b.parentId) return -1;
-        if (a.parentId && !b.parentId) return 1;
-        return 0;
+      const totalRecords = categories.length + countries.length + regions.length + cities.length + packages.length;
+      toast({
+        title: "SQL Generated!",
+        description: `Exported ${totalRecords} total records.`,
       });
-
-      const categorySql = sortedCategories.map(cat => {
-        const parentIdValue = cat.parentId ? cat.parentId : 'NULL';
-        const countValue = cat.count || 0;
-        return `INSERT INTO categories (name, slug, icon, parent_id, count)
-VALUES ('${cat.name.replace(/'/g, "''")}', '${cat.slug}', '${cat.icon}', ${parentIdValue}, ${countValue})
-ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, icon = EXCLUDED.icon, parent_id = EXCLUDED.parent_id, count = EXCLUDED.count;`;
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate SQL export.",
+        variant: "destructive",
       });
-
-      sqlParts.push(`-- ========================================
--- CATEGORIES (${categories.length} total)
--- ========================================
-${categorySql.join('\n\n')}`);
     }
-
-    // Countries
-    if (countries.length > 0) {
-      const countrySql = countries.map(c => {
-        const code = c.code ? `'${c.code}'` : 'NULL';
-        const continent = c.continent ? `'${c.continent.replace(/'/g, "''")}'` : 'NULL';
-        return `INSERT INTO countries (name, slug, flag, code, continent)
-VALUES ('${c.name.replace(/'/g, "''")}', '${c.slug}', '${c.flag}', ${code}, ${continent})
-ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, flag = EXCLUDED.flag, code = EXCLUDED.code, continent = EXCLUDED.continent;`;
-      });
-      sqlParts.push(`\n\n-- ========================================
--- COUNTRIES (${countries.length} total)
--- ========================================
-${countrySql.join('\n\n')}`);
-    }
-
-    // Regions
-    if (regions.length > 0) {
-      const regionSql = regions.map(r => {
-        const type = r.type ? `'${r.type.replace(/'/g, "''")}'` : 'NULL';
-        return `INSERT INTO regions (name, slug, country_id, type)
-VALUES ('${r.name.replace(/'/g, "''")}', '${r.slug}', ${r.countryId}, ${type})
-ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, country_id = EXCLUDED.country_id, type = EXCLUDED.type;`;
-      });
-      sqlParts.push(`\n\n-- ========================================
--- REGIONS (${regions.length} total)
--- ========================================
-${regionSql.join('\n\n')}`);
-    }
-
-    // Cities
-    if (cities.length > 0) {
-      const citySql = cities.map(c => {
-        const regionId = c.regionId || 'NULL';
-        const population = c.population || 'NULL';
-        const isCapital = c.isCapital ? 'true' : 'false';
-        const latitude = c.latitude || 'NULL';
-        const longitude = c.longitude || 'NULL';
-        return `INSERT INTO cities (name, slug, country_id, region_id, population, is_capital, latitude, longitude)
-VALUES ('${c.name.replace(/'/g, "''")}', '${c.slug}', ${c.countryId}, ${regionId}, ${population}, ${isCapital}, ${latitude}, ${longitude})
-ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, country_id = EXCLUDED.country_id, region_id = EXCLUDED.region_id, population = EXCLUDED.population, is_capital = EXCLUDED.is_capital, latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude;`;
-      });
-      sqlParts.push(`\n\n-- ========================================
--- CITIES (${cities.length} total)
--- ========================================
-${citySql.join('\n\n')}`);
-    }
-
-    // Promotional Packages
-    if (packages.length > 0) {
-      const packageSql = packages.map(p => {
-        const featuresStr = JSON.stringify(p.features).replace(/'/g, "''");
-        return `INSERT INTO promotional_packages (name, price, duration_days, features, active)
-VALUES ('${p.name.replace(/'/g, "''")}', ${p.price}, ${p.durationDays}, '${featuresStr}'::jsonb, ${p.active})
-ON CONFLICT (name) DO UPDATE SET price = EXCLUDED.price, duration_days = EXCLUDED.duration_days, features = EXCLUDED.features, active = EXCLUDED.active;`;
-      });
-      sqlParts.push(`\n\n-- ========================================
--- PROMOTIONAL PACKAGES (${packages.length} total)
--- ========================================
-${packageSql.join('\n\n')}`);
-    }
-
-    const fullSql = `-- ========================================
--- REFERENCE DATA EXPORT
--- Generated: ${new Date().toLocaleString()}
--- ========================================
--- Total: ${categories.length} categories, ${countries.length} countries, 
---        ${regions.length} regions, ${cities.length} cities, ${packages.length} packages
---
--- This SQL uses ON CONFLICT to safely insert/update data
--- Safe to run multiple times
--- ========================================
-
-${sqlParts.join('\n')}
-
--- ========================================
--- IMPORT COMPLETE!
--- ========================================`;
-
-    setSqlOutput(fullSql);
-
-    toast({
-      title: "SQL Generated!",
-      description: `Exported ${categories.length + countries.length + regions.length + cities.length + packages.length} total records.`,
-    });
   };
 
   const copyToClipboard = async () => {
