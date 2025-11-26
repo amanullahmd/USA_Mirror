@@ -117,8 +117,10 @@ export const submissions = pgTable("submissions", {
   description: text("description").notNull(),
   categoryId: integer("category_id").notNull().references(() => categories.id),
   countryId: integer("country_id").notNull().references(() => countries.id),
-  regionId: integer("region_id").notNull().references(() => regions.id),
-  cityId: integer("city_id").references(() => cities.id),
+  regionId: integer("region_id").references(() => regions.id), // Optional - can use regionName instead
+  cityId: integer("city_id").references(() => cities.id), // Optional - can use cityName instead
+  regionName: text("region_name"), // Manual entry for region/state
+  cityName: text("city_name"), // Manual entry for city
   contactPerson: text("contact_person").notNull(),
   phone: text("phone").notNull(),
   email: text("email").notNull(),

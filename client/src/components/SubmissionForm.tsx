@@ -28,15 +28,15 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Loader2, Check, Image, Video, Star } from "lucide-react";
-import type { Category, Country, Region, City, PromotionalPackage } from "@shared/schema";
+import type { Category, Country, PromotionalPackage } from "@shared/schema";
 
 const formSchema = z.object({
   businessName: z.string().min(2, "Business name must be at least 2 characters"),
   parentCategory: z.string().min(1, "Please select a category"),
   subcategory: z.string().optional(),
   country: z.string().min(1, "Please select a country"),
-  region: z.string().min(1, "Please select a state/province"),
-  city: z.string().optional(),
+  regionName: z.string().min(2, "Please enter your state/province/region name"),
+  cityName: z.string().optional(),
   description: z.string().min(10, "Description must be at least 10 characters"),
   contactPerson: z.string().min(2, "Contact person name is required"),
   phone: z.string().min(10, "Valid phone number is required"),
@@ -75,18 +75,6 @@ export default function SubmissionForm() {
     queryKey: ["/api/promotional-packages"],
   });
 
-  const [selectedCountryId, setSelectedCountryId] = useState<number | null>(null);
-  const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
-
-  const { data: regions = [] } = useQuery<Region[]>({
-    queryKey: [`/api/regions?countryId=${selectedCountryId}`],
-    enabled: selectedCountryId !== null,
-  });
-
-  const { data: cities = [] } = useQuery<City[]>({
-    queryKey: [`/api/cities?regionId=${selectedRegionId}`],
-    enabled: selectedRegionId !== null,
-  });
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -95,8 +83,8 @@ export default function SubmissionForm() {
       parentCategory: "",
       subcategory: "",
       country: "",
-      region: "",
-      city: "",
+      regionName: "",
+      cityName: "",
       description: "",
       contactPerson: "",
       phone: "",
@@ -120,10 +108,8 @@ export default function SubmissionForm() {
       const finalCategoryId = data.subcategory || data.parentCategory;
       const category = categories.find((c) => c.id.toString() === finalCategoryId);
       const country = countries.find((c) => c.id.toString() === data.country);
-      const region = regions.find((r) => r.id.toString() === data.region);
-      const city = data.city ? cities.find((c) => c.id.toString() === data.city) : null;
 
-      if (!category || !country || !region) {
+      if (!category || !country) {
         throw new Error("Invalid selection");
       }
 
@@ -132,8 +118,8 @@ export default function SubmissionForm() {
         description: data.description,
         categoryId: category.id,
         countryId: country.id,
-        regionId: region.id,
-        cityId: city?.id || undefined,
+        regionName: data.regionName,
+        cityName: data.cityName || undefined,
         contactPerson: data.contactPerson,
         phone: data.phone,
         email: data.email,
@@ -151,8 +137,6 @@ export default function SubmissionForm() {
         description: "Your listing will be reviewed by our team shortly.",
       });
       form.reset();
-      setSelectedCountryId(null);
-      setSelectedRegionId(null);
       setStep(1);
       queryClient.invalidateQueries({ queryKey: ["/api/submissions"] });
     },
@@ -167,24 +151,6 @@ export default function SubmissionForm() {
 
   function onSubmit(data: FormData) {
     submitMutation.mutate(data);
-  }
-
-  function handleCountryChange(countryId: string) {
-    const country = countries.find((c) => c.id.toString() === countryId);
-    if (country) {
-      setSelectedCountryId(country.id);
-      setSelectedRegionId(null);
-      form.setValue("region", "");
-      form.setValue("city", "");
-    }
-  }
-
-  function handleRegionChange(regionId: string) {
-    const region = regions.find((r) => r.id.toString() === regionId);
-    if (region) {
-      setSelectedRegionId(region.id);
-      form.setValue("city", "");
-    }
   }
 
   const formatPrice = (cents: number) => {
@@ -303,10 +269,7 @@ export default function SubmissionForm() {
                     <FormItem>
                       <FormLabel>Country</FormLabel>
                       <Select
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          handleCountryChange(value);
-                        }}
+                        onValueChange={field.onChange}
                         value={field.value}
                         disabled={countriesLoading}
                       >
@@ -333,69 +296,39 @@ export default function SubmissionForm() {
                 />
                 <FormField
                   control={form.control}
-                  name="region"
+                  name="regionName"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>State/Province/Region</FormLabel>
-                      <Select 
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          handleRegionChange(value);
-                        }} 
-                        value={field.value} 
-                        disabled={!selectedCountryId}
-                      >
-                        <FormControl>
-                          <SelectTrigger data-testid="select-region">
-                            <SelectValue placeholder={!selectedCountryId ? "Select country first" : "Select state/province"} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {regions.map((region) => (
-                            <SelectItem 
-                              key={region.id} 
-                              value={region.id.toString()}
-                              data-testid={`option-region-${region.id}`}
-                            >
-                              {region.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter your state, province, or region name" 
+                          {...field} 
+                          data-testid="input-region-name" 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Type the name of your state, province, or region
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 <FormField
                   control={form.control}
-                  name="city"
+                  name="cityName"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>City (Optional)</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        value={field.value} 
-                        disabled={!selectedRegionId}
-                      >
-                        <FormControl>
-                          <SelectTrigger data-testid="select-city">
-                            <SelectValue placeholder={!selectedRegionId ? "Select state/province first" : cities.length === 0 ? "No cities available" : "Select city"} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {cities.map((city) => (
-                            <SelectItem 
-                              key={city.id} 
-                              value={city.id.toString()}
-                              data-testid={`option-city-${city.id}`}
-                            >
-                              {city.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter your city name" 
+                          {...field} 
+                          data-testid="input-city-name" 
+                        />
+                      </FormControl>
                       <FormDescription>
-                        Select a city if available, or leave blank to use state/province only
+                        Leave blank if not applicable
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -424,7 +357,7 @@ export default function SubmissionForm() {
                     type="button" 
                     onClick={async () => {
                       // Validate step 1 fields before proceeding
-                      const step1Fields = await form.trigger(["businessName", "parentCategory", "country", "region", "description"]);
+                      const step1Fields = await form.trigger(["businessName", "parentCategory", "country", "regionName", "description"]);
                       if (step1Fields) {
                         setStep(2);
                       }
