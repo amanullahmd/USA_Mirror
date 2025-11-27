@@ -195,6 +195,11 @@ export function registerRoutes(app: Express) {
       if (status === 'approved') {
         const submission = await storage.getSubmissionById(id);
         if (submission) {
+          // Validate that regionId is present (required for listings)
+          if (!submission.regionId) {
+            return res.status(400).json({ error: "Submission must have a valid region/state selected to be approved" });
+          }
+
           const newListing: any = {
             title: submission.businessName,
             description: submission.description,
