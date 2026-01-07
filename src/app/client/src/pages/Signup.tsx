@@ -15,7 +15,7 @@ export function Signup() {
   useEffect(() => {
     authAPI.session().then((res) => {
       if (res.authenticated) {
-        window.location.href = '/';
+        window.location.href = '/dashboard';
       }
     }).catch(() => {});
   }, []);
@@ -29,7 +29,7 @@ export function Signup() {
       const res = await authAPI.signup({ email, password, firstName, lastName, phone });
       if (res.authenticated) {
         setSuccess('Account created successfully');
-        window.location.href = '/';
+        window.location.href = '/dashboard';
       } else {
         setError('Signup failed');
       }

@@ -37,6 +37,9 @@ npm start            # Start production server
 npm run check        # TypeScript type checking
 npm run lint         # Run ESLint
 npm run lint:fix     # Fix ESLint errors
+npm run test         # Run all tests (61 tests)
+npm run test:watch   # Run tests in watch mode
+npm run test:coverage # Generate coverage report
 npm run db:push      # Push migrations to database
 ```
 

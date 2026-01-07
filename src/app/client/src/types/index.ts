@@ -42,6 +42,9 @@ export interface Listing {
   position?: number;
   positionExpiresAt?: string;
   expiresAt?: string;
+  status?: 'pending' | 'approved' | 'rejected';
+  user?: User;
+  category?: Category;
   createdAt: string;
   updatedAt: string;
 }

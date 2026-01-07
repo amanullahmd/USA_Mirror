@@ -1,32 +1,33 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode } from 'react';
 import './Layout.css';
 import { Button } from '../components/ui/button';
-import { authAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import { useLocation } from 'wouter';
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 export function Layout({ children }: LayoutProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const { authenticated, user, logout } = useAuth();
+  const [, navigate] = useLocation();
 
-  useEffect(() => {
-    authAPI
-      .session()
-      .then((res) => {
-        if (res.authenticated && res.user?.email) setUserEmail(res.user.email);
-      })
-      .catch(() => {});
-  }, []);
-
-  const logout = async () => {
-    try {
-      await authAPI.logout();
-      setUserEmail(null);
-      window.location.href = '/';
-    } catch {}
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
   };
+
+  const userEmail = authenticated && user ? (user as any).email : null;
+
+  // Determine if user is admin based on user object structure
+  const isAdmin = authenticated && user && 'username' in user;
+
+  const getDashboardLink = () => {
+    if (!authenticated) return null;
+    return isAdmin ? '/admin/dashboard' : '/dashboard';
+  };
+
+  const dashboardLink = getDashboardLink();
 
   return (
     <div className="layout">
@@ -39,10 +40,13 @@ export function Layout({ children }: LayoutProps) {
           <nav className="hidden items-center gap-6 md:flex">
             <a href="/" className="text-sm font-medium text-gray-800 hover:text-blue-600">Home</a>
             <a href="/listings" className="text-sm font-medium text-gray-800 hover:text-blue-600">Browse</a>
+            {authenticated && dashboardLink && (
+              <a href={dashboardLink} className="text-sm font-medium text-gray-800 hover:text-blue-600">Dashboard</a>
+            )}
             {userEmail ? (
               <>
                 <span className="text-sm text-gray-600">Signed in as {userEmail}</span>
-                <Button variant="ghost" onClick={logout}>Logout</Button>
+                <Button variant="ghost" onClick={handleLogout}>Logout</Button>
               </>
             ) : (
               <>
@@ -53,7 +57,7 @@ export function Layout({ children }: LayoutProps) {
           </nav>
           <button
             className="inline-flex items-center justify-center rounded-md border p-2 md:hidden"
-            onClick={() => setMenuOpen((v) => !v)}
+            onClick={() => {}}
             aria-label="Toggle menu"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -61,27 +65,6 @@ export function Layout({ children }: LayoutProps) {
             </svg>
           </button>
         </div>
-        {menuOpen && (
-          <div className="md:hidden">
-            <div className="mx-auto max-w-6xl px-6 pb-4">
-              <div className="flex flex-col gap-2">
-                <a href="/" className="rounded-md px-3 py-2 text-sm font-medium hover:bg-gray-100">Home</a>
-                <a href="/listings" className="rounded-md px-3 py-2 text-sm font-medium hover:bg-gray-100">Browse</a>
-                {userEmail ? (
-                  <>
-                    <span className="rounded-md px-3 py-2 text-sm text-gray-600">Signed in as {userEmail}</span>
-                    <Button variant="ghost" onClick={logout}>Logout</Button>
-                  </>
-                ) : (
-                  <>
-                    <a href="/auth/login" className="rounded-md px-3 py-2 text-sm font-medium hover:bg-gray-100">Login</a>
-                    <a href="/auth/signup"><Button variant="secondary" size="sm">Sign Up</Button></a>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </header>
 
       <main className="main">

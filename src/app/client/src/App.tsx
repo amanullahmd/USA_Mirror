@@ -8,21 +8,25 @@ import { CategoryView } from './pages/CategoryView';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { CreateListing } from './pages/CreateListing';
+import { ListingForm } from './pages/ListingForm';
+import { MyListings } from './pages/MyListings';
 import { NotFound } from './pages/NotFound';
 import { AdminSubmissions } from './pages/AdminSubmissions';
-import { AdminLogin } from './pages/AdminLogin';
+import { AdminPendingApprovals } from './pages/AdminPendingApprovals';
+import { AdminAllListings } from './pages/AdminAllListings';
+import { UserDashboard } from './pages/UserDashboard';
+import { AdminDashboard } from './pages/AdminDashboard';
+import { AuthProvider } from './contexts/AuthContext';
 
 function App() {
   return (
-    <Router>
-      <Layout>
+    <AuthProvider>
+      <Router>
+        <Layout>
         {/* Public Pages */}
         <Route path="/" component={Home} />
         <Route path="/listings" component={Listings} />
-        
-        {/* Coming Soon Pages */}
         <Route path="/listings/:id" component={ListingDetail} />
-        
         <Route path="/categories/:slug" component={CategoryView} />
         
         <Route path="/search" component={() => (
@@ -34,7 +38,6 @@ function App() {
 
         {/* Authentication Pages */}
         <Route path="/auth/login" component={Login} />
-        
         <Route path="/auth/signup" component={Signup} />
         
         <Route path="/auth/forgot-password" component={() => (
@@ -58,27 +61,38 @@ function App() {
           </div>
         )} />
 
+        {/* User Dashboard Pages */}
+        <Route path="/dashboard" component={UserDashboard} />
+        <Route path="/dashboard/listings" component={MyListings} />
+        <Route path="/dashboard/listings/new" component={CreateListing} />
+        <Route path="/dashboard/listings/:id/edit" component={ListingForm} />
+        
+        <Route path="/dashboard/submissions" component={() => (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <h1>My Submissions</h1>
+            <p>Coming Soon - User submissions page</p>
+          </div>
+        )} />
+        
+        <Route path="/dashboard/profile" component={() => (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <h1>My Profile</h1>
+            <p>Coming Soon - User profile page</p>
+          </div>
+        )} />
+        
+        <Route path="/dashboard/settings" component={() => (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <h1>Account Settings</h1>
+            <p>Coming Soon - Account settings page</p>
+          </div>
+        )} />
+
         {/* Admin Pages */}
-        <Route path="/admin/login" component={() => (
-          <div style={{ padding: '2rem', textAlign: 'center' }}>
-            <h1>Admin Login</h1>
-            <p>Coming Soon - Admin login page</p>
-          </div>
-        )} />
-        
-        <Route path="/admin/dashboard" component={() => (
-          <div style={{ padding: '2rem', textAlign: 'center' }}>
-            <h1>Admin Dashboard</h1>
-            <p>Coming Soon - Admin dashboard</p>
-          </div>
-        )} />
-        
-        <Route path="/admin/listings" component={() => (
-          <div style={{ padding: '2rem', textAlign: 'center' }}>
-            <h1>Manage Listings</h1>
-            <p>Coming Soon - Admin listings management</p>
-          </div>
-        )} />
+        <Route path="/admin/dashboard" component={AdminDashboard} />
+        <Route path="/admin/listings/pending" component={AdminPendingApprovals} />
+        <Route path="/admin/listings" component={AdminAllListings} />
+        <Route path="/admin/submissions" component={AdminSubmissions} />
         
         <Route path="/admin/categories" component={() => (
           <div style={{ padding: '2rem', textAlign: 'center' }}>
@@ -91,13 +105,6 @@ function App() {
           <div style={{ padding: '2rem', textAlign: 'center' }}>
             <h1>Manage Users</h1>
             <p>Coming Soon - Admin users management</p>
-          </div>
-        )} />
-        
-        <Route path="/admin/submissions" component={() => (
-          <div style={{ padding: '2rem', textAlign: 'center' }}>
-            <h1>Manage Submissions</h1>
-            <p>Coming Soon - Admin submissions management</p>
           </div>
         )} />
         
@@ -122,57 +129,11 @@ function App() {
           </div>
         )} />
 
-        {/* User Dashboard Pages */}
-        <Route path="/dashboard" component={() => (
-          <div style={{ padding: '2rem', textAlign: 'center' }}>
-            <h1>User Dashboard</h1>
-            <p>Coming Soon - User dashboard overview</p>
-          </div>
-        )} />
-        
-        <Route path="/dashboard/listings" component={() => (
-          <div style={{ padding: '2rem', textAlign: 'center' }}>
-            <h1>My Listings</h1>
-            <p>Coming Soon - User listings management</p>
-          </div>
-        )} />
-        
-        <Route path="/dashboard/listings/new" component={CreateListing} />
-        <Route path="/admin/submissions" component={AdminSubmissions} />
-        <Route path="/admin/login" component={AdminLogin} />
-        
-        <Route path="/dashboard/listings/:id/edit" component={() => (
-          <div style={{ padding: '2rem', textAlign: 'center' }}>
-            <h1>Edit Listing</h1>
-            <p>Coming Soon - Edit listing page</p>
-          </div>
-        )} />
-        
-        <Route path="/dashboard/submissions" component={() => (
-          <div style={{ padding: '2rem', textAlign: 'center' }}>
-            <h1>My Submissions</h1>
-            <p>Coming Soon - User submissions page</p>
-          </div>
-        )} />
-        
-        <Route path="/dashboard/profile" component={() => (
-          <div style={{ padding: '2rem', textAlign: 'center' }}>
-            <h1>My Profile</h1>
-            <p>Coming Soon - User profile page</p>
-          </div>
-        )} />
-        
-        <Route path="/dashboard/settings" component={() => (
-          <div style={{ padding: '2rem', textAlign: 'center' }}>
-            <h1>Account Settings</h1>
-            <p>Coming Soon - Account settings page</p>
-          </div>
-        )} />
-
         {/* 404 Page */}
         <Route path="/:rest*" component={NotFound} />
       </Layout>
     </Router>
+    </AuthProvider>
   );
 }
 

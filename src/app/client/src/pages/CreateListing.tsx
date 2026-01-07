@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
-import { submissionsAPI, categoriesAPI, locationsAPI, authAPI } from '../services/api';
+import { categoriesAPI, locationsAPI } from '../services/api';
+import { useLocation } from 'wouter';
+import { useAuth } from '../contexts/AuthContext';
 import { Category, Country, Region, City, Listing } from '../types';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 
 export function CreateListing() {
+  const { authenticated, loading: authLoading } = useAuth();
+  const [, navigate] = useLocation();
   const [categories, setCategories] = useState<Category[]>([]);
   const [countries, setCountries] = useState<Country[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
@@ -28,9 +32,16 @@ export function CreateListing() {
   });
 
   useEffect(() => {
-    authAPI.session().then((res) => {
-      if (!res.authenticated) window.location.href = '/auth/login';
-    });
+    // If auth is still loading, wait
+    if (authLoading) return;
+
+    // If not authenticated, redirect to login
+    if (!authenticated) {
+      navigate('/auth/login');
+      return;
+    }
+
+    // Load form data
     Promise.all([categoriesAPI.getCategories(), locationsAPI.getCountries()])
       .then(([cats, coun]) => {
         setCategories(cats || []);
@@ -38,7 +49,7 @@ export function CreateListing() {
       })
       .catch(() => setError('Failed to load form data'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [authLoading, authenticated, navigate]);
 
   useEffect(() => {
     if (form.countryId) {
@@ -72,24 +83,32 @@ export function CreateListing() {
     setError(null);
     setSuccess(null);
     try {
-      await submissionsAPI.createSubmission({
-        businessName: form.title!,
-        description: form.description!,
-        categoryId: Number(form.categoryId),
-        countryId: Number(form.countryId),
-        regionId: Number(form.regionId),
-        cityId: form.cityId ? Number(form.cityId) : undefined,
-        contactPerson: form.contactPerson!,
-        phone: form.phone!,
-        email: form.email!,
-        website: form.website,
-        imageUrl: form.imageUrl,
-        listingType: form.listingType || 'free',
+      await fetch('/api/user/listings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: form.title,
+          description: form.description,
+          categoryId: Number(form.categoryId),
+          countryId: Number(form.countryId),
+          regionId: Number(form.regionId),
+          cityId: form.cityId ? Number(form.cityId) : undefined,
+          contactPerson: form.contactPerson,
+          phone: form.phone,
+          email: form.email,
+          website: form.website || undefined,
+          imageUrl: form.imageUrl || undefined,
+          listingType: form.listingType || 'free',
+        }),
       });
-      setSuccess('Submitted for review');
-      window.location.href = `/admin/submissions`;
+      setSuccess('Listing created successfully! It will appear in your dashboard.');
+      // Redirect after 2 seconds to show the success message
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000);
     } catch (err) {
       setError('Failed to create listing. Please check fields and try again.');
+      console.error(err);
     }
   };
 

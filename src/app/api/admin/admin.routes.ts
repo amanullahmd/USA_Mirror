@@ -1,8 +1,14 @@
 import { Express } from 'express';
 import { asyncHandler } from '../../middleware/error.middleware';
 import { requireAdminAuth } from '../../middleware/auth.middleware';
+import approvalRoutes from './approval.routes';
+import listingRoutes from './listings.routes';
 
 export function registerAdminRoutes(app: Express) {
+  // Admin approval routes
+  app.use('/api/admin/listings', approvalRoutes);
+  app.use('/api/admin/listings', listingRoutes);
+
   // Get admin stats
   app.get('/api/admin/stats', requireAdminAuth, asyncHandler(async (req, res) => {
     res.json({ message: 'Get stats endpoint' });

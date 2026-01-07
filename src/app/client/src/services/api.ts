@@ -123,6 +123,10 @@ export const listingsAPI = {
     );
   },
 
+  // Get user's listings
+  getUserListings: () =>
+    apiCall<Listing[]>('/user/listings'),
+
   // Get listing by ID
   getListing: (id: number) =>
     apiCall<Listing>(`/listings/${id}`),

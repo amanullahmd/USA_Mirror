@@ -115,6 +115,7 @@ export const listings = pgTable('listings', {
   views: integer('views').notNull().default(0),
   position: integer('position'),
   positionExpiresAt: timestamp('position_expires_at'),
+  status: text('status').notNull().default('approved'),
   expiresAt: timestamp('expires_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),

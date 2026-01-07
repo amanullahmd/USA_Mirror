@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
+import { useLocation } from 'wouter';
 import { listingsAPI, categoriesAPI, locationsAPI, authAPI } from '../services/api';
 import { Listing, Category, Country } from '../types';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Card, CardContent } from '../components/ui/card';
+import './Home.css';
 
 export function Home() {
   const [listings, setListings] = useState<Listing[]>([]);
@@ -12,6 +13,8 @@ export function Home() {
   const [error, setError] = useState<string | null>(null);
   const [countries, setCountries] = useState<Country[]>([]);
   const [authenticated, setAuthenticated] = useState(false);
+  const [, navigate] = useLocation();
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -38,145 +41,219 @@ export function Home() {
     authAPI.session().then((res) => setAuthenticated(!!res.authenticated)).catch(() => {});
   }, []);
 
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/listings?search=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
   return (
-    <div className="flex flex-col gap-12">
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
-        <div className="mx-auto max-w-6xl px-6 py-16">
-          <div className="grid items-center gap-8 md:grid-cols-2">
-            <div>
-              <h1 className="text-4xl font-bold tracking-tight md:text-5xl">Find and Promote Businesses Across America</h1>
-              <p className="mt-3 text-white/90">Browse verified listings by category and location, or add your own business.</p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <a href="/listings"><Button size="lg">Browse Listings</Button></a>
-                {authenticated ? (
-                  <a href="/dashboard/listings/new"><Button size="lg" variant="secondary">Post Your Business</Button></a>
-                ) : (
-                  <a href="/auth/signup"><Button size="lg" variant="secondary">Post Your Business</Button></a>
-                )}
-              </div>
+    <div className="home-container">
+      {/* Hero Section */}
+      <section className="hero-section">
+        <div className="hero-content">
+          <div className="hero-text">
+            <div className="logo-container">
+              <img src="/theUSAMirror logo_new-vertical.png" alt="USA Mirror Logo" className="hero-logo" />
             </div>
-            <Card className="bg-white/10 backdrop-blur-md">
-              <CardContent className="p-6">
-                <div className="text-white">
-                  <p className="text-lg font-semibold">Live Stats</p>
-                  <div className="mt-4 grid grid-cols-2 gap-4">
-                    <div className="rounded-lg bg-white/10 p-4">
-                      <p className="text-3xl font-bold">{categories.length}</p>
-                      <p className="text-sm">Categories</p>
-                    </div>
-                    <div className="rounded-lg bg-white/10 p-4">
-                      <p className="text-3xl font-bold">{countries.length}</p>
-                      <p className="text-sm">Countries</p>
-                    </div>
-                    <div className="rounded-lg bg-white/10 p-4">
-                      <p className="text-3xl font-bold">{listings.length}</p>
-                      <p className="text-sm">Listings</p>
-                    </div>
-                    <div className="rounded-lg bg-white/10 p-4">
-                      <p className="text-3xl font-bold">5+</p>
-                      <p className="text-sm">Cities</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <h1 className="hero-title">Discover & Promote Local Businesses</h1>
+            <p className="hero-subtitle">Connect with verified businesses across America. Find what you need or showcase your business to thousands of customers.</p>
+            
+            <div className="hero-search">
+              <Input 
+                placeholder="Search businesses, categories, or locations..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                className="search-input"
+              />
+              <Button onClick={handleSearch} className="search-button">Search</Button>
+            </div>
+
+            <div className="hero-buttons">
+              <Button onClick={() => navigate('/listings')} size="lg" className="btn-primary">
+                Browse Listings
+              </Button>
+              {authenticated ? (
+                <Button onClick={() => navigate('/dashboard/listings/new')} size="lg" className="btn-secondary">
+                  Post Your Business
+                </Button>
+              ) : (
+                <Button onClick={() => navigate('/auth/signup')} size="lg" className="btn-secondary">
+                  Post Your Business
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <div className="hero-stats">
+            <div className="stat-card">
+              <div className="stat-number">{categories.length}+</div>
+              <div className="stat-label">Categories</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-number">{listings.length}+</div>
+              <div className="stat-label">Active Listings</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-number">{countries.length}+</div>
+              <div className="stat-label">Locations</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-number">24/7</div>
+              <div className="stat-label">Available</div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Search Section */}
-      <section className="px-6">
-        <div className="mx-auto max-w-3xl">
-          <div className="flex gap-3">
-            <Input placeholder="Search businesses..." />
-            <a href="/listings"><Button>Search</Button></a>
+      {/* Features Section */}
+      <section className="features-section">
+        <h2 className="section-title">Why Choose USA Mirror?</h2>
+        <div className="features-grid">
+          <div className="feature-card">
+            <div className="feature-icon">🔍</div>
+            <h3>Easy Discovery</h3>
+            <p>Find businesses by category, location, or search terms. Browse verified listings with detailed information.</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">📱</div>
+            <h3>Mobile Friendly</h3>
+            <p>Access USA Mirror on any device. Responsive design ensures perfect experience on desktop, tablet, or phone.</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">✅</div>
+            <h3>Verified Listings</h3>
+            <p>All businesses are reviewed and verified. Trust that you're connecting with legitimate, quality businesses.</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">🚀</div>
+            <h3>Grow Your Business</h3>
+            <p>Reach thousands of potential customers. Showcase your business with detailed listings and contact information.</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">💼</div>
+            <h3>Professional Tools</h3>
+            <p>Manage your listings easily. Edit, update, and track your business presence with our intuitive dashboard.</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">🌟</div>
+            <h3>Premium Support</h3>
+            <p>Get help when you need it. Our support team is ready to assist with any questions or issues.</p>
           </div>
         </div>
       </section>
 
       {/* Categories Section */}
-      <section className="px-6">
-        <h2 className="text-center text-2xl font-semibold">Browse by Category</h2>
+      <section className="categories-section">
+        <h2 className="section-title">Browse by Category</h2>
         {loading ? (
-          <p className="mt-4 text-center">Loading categories...</p>
+          <p className="loading-text">Loading categories...</p>
         ) : error ? (
-          <p className="mt-4 text-center text-red-600">{error}</p>
+          <p className="error-text">{error}</p>
         ) : (
-          <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div className="categories-grid">
             {categories.slice(0, 8).map((category) => (
-              <a key={category.id} href={`/categories/${category.slug}`} className="group rounded-xl border bg-white p-6 text-center shadow-sm transition hover:shadow-md">
-                <div className="text-3xl">{category.icon}</div>
-                <p className="mt-2 font-medium">{category.name}</p>
-                <p className="text-sm text-gray-600">{category.count} listings</p>
-              </a>
+              <div 
+                key={category.id} 
+                className="category-card"
+                onClick={() => navigate(`/listings?categoryId=${category.id}`)}
+              >
+                <h3 className="category-name">{category.name}</h3>
+                <p className="category-count">{category.count} listings</p>
+              </div>
             ))}
           </div>
         )}
+        <div className="view-all-btn">
+          <Button onClick={() => navigate('/listings')} variant="secondary" size="lg">
+            View All Categories
+          </Button>
+        </div>
       </section>
 
       {/* Featured Listings Section */}
-      <section className="px-6">
-        <h2 className="text-center text-2xl font-semibold">Featured Listings</h2>
+      <section className="listings-section">
+        <h2 className="section-title">Featured Listings</h2>
         {loading ? (
-          <p className="mt-4 text-center">Loading listings...</p>
+          <p className="loading-text">Loading listings...</p>
         ) : error ? (
-          <p className="mt-4 text-center text-red-600">{error}</p>
+          <p className="error-text">{error}</p>
         ) : listings.length === 0 ? (
-          <p className="mt-4 text-center text-gray-600">No listings available</p>
+          <p className="no-listings-text">No listings available yet. Be the first to list your business!</p>
         ) : (
-          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="listings-grid">
             {listings.map((listing) => (
-              <a key={listing.id} href={`/listings/${listing.id}`} className="overflow-hidden rounded-xl border bg-white shadow-sm transition hover:shadow-md">
+              <div 
+                key={listing.id} 
+                className="listing-card"
+                onClick={() => navigate(`/listings/${listing.id}`)}
+              >
                 {listing.imageUrl && (
-                  <img className="h-44 w-full object-cover" src={listing.imageUrl} alt={listing.title} />
+                  <img className="listing-image" src={listing.imageUrl} alt={listing.title} />
                 )}
-                <div className="p-4">
-                  <h3 className="line-clamp-1 text-lg font-semibold">{listing.title}</h3>
-                  <p className="mt-1 line-clamp-2 text-sm text-gray-600">
-                    {listing.description.substring(0, 100)}...
+                <div className="listing-content">
+                  <h3 className="listing-title">{listing.title}</h3>
+                  <p className="listing-description">
+                    {listing.description.substring(0, 80)}...
                   </p>
-                  <div className="mt-3 flex items-center gap-2 text-sm text-gray-500">
-                    <span>👁️ {listing.views}</span>
-                    {listing.featured && <span className="text-amber-600">⭐ Featured</span>}
+                  <div className="listing-meta">
+                    <span className="listing-views">👁️ {listing.views} views</span>
+                    {listing.featured && <span className="listing-featured">⭐ Featured</span>}
                   </div>
                 </div>
-              </a>
+              </div>
             ))}
           </div>
         )}
-        <div className="mt-6 text-center">
-          <a href="/listings"><Button variant="secondary" size="lg">View All Listings</Button></a>
+        <div className="view-all-btn">
+          <Button onClick={() => navigate('/listings')} variant="secondary" size="lg">
+            View All Listings
+          </Button>
         </div>
       </section>
 
       {/* Stats Section */}
-      <section className="px-6">
-        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-4 rounded-xl bg-white p-6 text-center md:grid-cols-4">
-          <div>
-            <p className="text-3xl font-bold text-blue-600">{categories.length}</p>
-            <p className="text-sm text-gray-600">Categories</p>
+      <section className="stats-section">
+        <div className="stats-grid">
+          <div className="stats-item">
+            <div className="stats-number">{categories.length}+</div>
+            <div className="stats-label">Categories</div>
           </div>
-          <div>
-            <p className="text-3xl font-bold text-blue-600">{countries.length}</p>
-            <p className="text-sm text-gray-600">Countries</p>
+          <div className="stats-item">
+            <div className="stats-number">{listings.length}+</div>
+            <div className="stats-label">Active Listings</div>
           </div>
-          <div>
-            <p className="text-3xl font-bold text-blue-600">5+</p>
-            <p className="text-sm text-gray-600">Cities</p>
+          <div className="stats-item">
+            <div className="stats-number">{countries.length}+</div>
+            <div className="stats-label">Locations</div>
           </div>
-          <div>
-            <p className="text-3xl font-bold text-blue-600">{listings.length}</p>
-            <p className="text-sm text-gray-600">Listings</p>
+          <div className="stats-item">
+            <div className="stats-number">100%</div>
+            <div className="stats-label">Verified</div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 px-6 py-12 text-center text-white">
-        <h2 className="text-3xl font-semibold">Ready to List Your Business?</h2>
-        <p className="mt-2 text-white/90">Join thousands of businesses on USA Mirror</p>
-        <div className="mt-6">
-          <a href="/auth/signup"><Button size="lg">Get Started Today</Button></a>
+      <section className="cta-section">
+        <div className="cta-content">
+          <h2 className="cta-title">Ready to Grow Your Business?</h2>
+          <p className="cta-subtitle">Join thousands of businesses already using USA Mirror to reach new customers</p>
+          <div className="cta-buttons">
+            {authenticated ? (
+              <Button onClick={() => navigate('/dashboard/listings/new')} size="lg" className="btn-primary">
+                Create Your First Listing
+              </Button>
+            ) : (
+              <Button onClick={() => navigate('/auth/signup')} size="lg" className="btn-primary">
+                Get Started Today
+              </Button>
+            )}
+            <Button onClick={() => navigate('/listings')} size="lg" className="btn-secondary">
+              Browse Listings
+            </Button>
+          </div>
         </div>
       </section>
     </div>

@@ -8,8 +8,10 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: 'bg-blue-600 text-white hover:bg-blue-700',
+        primary: 'bg-blue-600 text-white hover:bg-blue-700',
         secondary: 'bg-white border border-blue-600 text-blue-600 hover:bg-blue-50',
         ghost: 'hover:bg-gray-100',
+        danger: 'bg-red-600 text-white hover:bg-red-700',
       },
       size: {
         default: 'h-10 px-4 py-2',
@@ -25,7 +27,7 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'default' | 'secondary' | 'ghost';
+  variant?: 'default' | 'primary' | 'secondary' | 'ghost' | 'danger';
   size?: 'default' | 'lg' | 'sm';
 }
 
